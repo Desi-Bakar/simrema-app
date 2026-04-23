@@ -50,12 +50,12 @@ export default function Home() {
               Login
             </Link>
 
-            {/* <Link
+            <Link
               href="/register"
               className="px-6 py-2 bg-green-500 text-white rounded-lg inline-block"
             >
-              Daftar
-            </Link> */}
+              Request Acces
+            </Link> 
           </div>
         </div>
 
