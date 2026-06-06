@@ -12,26 +12,31 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="flex-1 p-6 bg-gray-100">
+    <div className="flex-1 p-6 bg-gray-100  ">
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 mb-6">
         <div className="bg-white p-6 rounded-2xl shadow-sm flex items-center gap-4">
           <div className="bg-yellow-100 p-3 rounded-2xl text-xl">📄</div>
+
           <div>
             <p className="text-gray-500 text-sm">Total Materi</p>
             <h2 className="text-3xl font-bold">12</h2>
             <div className="mt-3 h-1 w-20 rounded-full bg-indigo-500" />
           </div>
+
         </div>
 
         <div className="bg-white p-6 rounded-2xl shadow-sm flex items-center gap-4">
+
           <div className="bg-green-100 p-3 rounded-2xl text-xl">📚</div>
           <div>
             <p className="text-gray-500 text-sm">Total Mata Kuliah</p>
             <h2 className="text-3xl font-bold">12</h2>
             <div className="mt-3 h-1 w-20 rounded-full bg-indigo-500" />
           </div>
+
         </div>
+        
       </div>
 
       <div className="bg-white p-6 rounded-2xl shadow-sm">
