@@ -3,6 +3,34 @@
 import { useState } from "react";
 
 export default function RekapMateriPage() {
+  const tahunMasehi = new Date().getFullYear()
+
+  const rekapMateriForm  = [
+    {
+      "id": "mataKuliah",
+      "name": "Mata Kuliah",
+      "type": "text",
+      "placeholder": "Masukkan mata kuliah yang ingin direkap"
+    },
+    {
+      "id": "tanggalRekap",
+      "name": "Tanggal Rekap Mata Kuliah",
+      "type": "date",
+      "placeholder": "Masukkan tanggal rekap"
+    },
+    {
+      "id": "pertemuanDosen",
+      "name": "Pertemuan Perkuliahan",
+      "type": "number",
+      "placeholder": "Masukkan angka pertemuan perkuliahan"
+    },{
+      "id": "materiPerkuliahan",
+      "name": "Materi Perkuliahan",
+      "type": "text",
+      "placeholder": "Masukkan materi perkuliahan"
+    }
+  ]
+
   const [form, setForm] = useState({
     mataKuliah: "",
     tanggal: "",
@@ -26,7 +54,7 @@ export default function RekapMateriPage() {
   };
 
   return (
-    <div className="flex-1 p-6 bg-gray-100 min-h-screen">
+    <div className="flex-1 p-6 bg-gray-100">
 
       {/* Title */}
       <h1 className="text-2xl font-semibold mb-6 text-center">
@@ -38,64 +66,25 @@ export default function RekapMateriPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
+        {
+          rekapMateriForm.map((input) => (
+            <div key={input.id}>
+              <label className="block text-sm font-medium mb-1">
+                {input.name}
+              </label>
+              <input
+                type={input.type}
+                name={input.id}
+                value={form.mataKuliah}
+                onChange={handleChange}
+                placeholder={input.placeholder}
+                className="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+          ))
+        }
           {/* Mata Kuliah */}
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Mata Kuliah
-            </label>
-            <input
-              type="text"
-              name="mataKuliah"
-              value={form.mataKuliah}
-              onChange={handleChange}
-              placeholder="Mata Kuliah"
-              className="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            />
-          </div>
-
-          {/* Tanggal */}
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Tanggal
-            </label>
-            <input
-              type="date"
-              name="tanggal"
-              value={form.tanggal}
-              onChange={handleChange}
-              className="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            />
-          </div>
-
-          {/* Pertemuan */}
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Pertemuan
-            </label>
-            <input
-              type="number"
-              name="pertemuan"
-              value={form.pertemuan}
-              onChange={handleChange}
-              placeholder="Pertemuan"
-              className="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            />
-          </div>
-
-          {/* Materi */}
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Materi
-            </label>
-            <textarea
-              name="materi"
-              value={form.materi}
-              onChange={handleChange}
-              placeholder="Materi..."
-              rows={4}
-              className="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            />
-          </div>
+          
 
           {/* Buttons */}
           <div className="flex justify-end gap-3 pt-4">
@@ -117,11 +106,6 @@ export default function RekapMateriPage() {
         </form>
 
       </div>
-
-      {/* Footer */}
-      <p className="text-center text-xs text-gray-400 mt-6">
-        ©2025 | Aplikasi Rekap Materi Mengajar Dosen.
-      </p>
 
     </div>
   );

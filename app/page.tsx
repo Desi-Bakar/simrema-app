@@ -41,7 +41,6 @@ export default function Home() {
           <p className="text-gray-600 mb-8">
             Kelola materi perkuliahan secara digital dan rapi.
           </p>
-
           <div className="space-x-4">
             <Link
               href="/login"
@@ -54,11 +53,10 @@ export default function Home() {
               href="/register"
               className="px-6 py-2 bg-green-500 text-white rounded-lg inline-block"
             >
-              Request Acces
+              Request Access
             </Link> 
           </div>
         </div>
-
         {/* Kanan (Gambar) */}
         <div>
           <img

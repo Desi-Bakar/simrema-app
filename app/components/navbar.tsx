@@ -2,14 +2,18 @@ import { Bell, UserCircle } from "lucide-react";
 
 export default function Navbar() {
   return (
-    <div className="flex justify-between items-center bg-white p-4 shadow-sm">
-      <h1 className="text-xl font-semibold">Rekap Materi Ajar</h1>
-
-      <div className="flex items-center gap-4">
-        <span className="text-gray-600">Selamat Datang, Dosen Shazil</span>
-        <Bell className="text-gray-600" />
-        <UserCircle className="text-gray-600" />
+    <nav className="flex justify-between items-center px-10 py-4 bg-white shadow">
+      <div className="flex items-center space-x-2">
+        <a href="/">
+        <img src="/simremalogo.png" alt="logo" className="h-10" />
+        </a>
       </div>
-    </div>
+      <div className="flex items-center space-x-2">
+        <span className="text-sm text-gray-600">
+          Selamat Datang Dosen
+        </span>
+        <img src="/profil.png" alt="logo" className="h-10" />
+      </div>
+    </nav>
   );
 }
