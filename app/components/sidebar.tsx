@@ -24,11 +24,11 @@ export default function Sidebar() {
       path: "/dashboard/rekap",
       icon: BookOpen,
     },
-    {
-      name: "Pemesanan",
-      path: "/dashboard/pemesanan",
-      icon: ShoppingCart,
-    },
+    // {
+    //   name: "Pemesanan",
+    //   path: "/dashboard/pemesanan",
+    //   icon: ShoppingCart,
+    // },
     {
       name: "Profil",
       path: "/dashboard/profil",
