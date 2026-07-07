@@ -32,7 +32,7 @@ export default function LoginPage() {
             Login
           </button>
           <div className="flex justify-between text-sm">
-            <a href="/password-request" className="text-blue-500">
+            <a href="/lupapassword" className="text-blue-500">
               Lupa Password?
             </a>
             <a href="/register" className="text-green-500">

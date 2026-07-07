@@ -20,8 +20,8 @@ export default function Sidebar() {
       icon: LayoutDashboard,
     },
     {
-      name: "Rekap Materi Ajar",
-      path: "/dashboard/rekap",
+      name: "Matakuliah",
+      path: "/dashboard/matakuliah",
       icon: BookOpen,
     },
     // {
