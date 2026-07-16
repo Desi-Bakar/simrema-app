@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 
 export default function ProfilPage() {
   return (
@@ -46,21 +47,22 @@ export default function ProfilPage() {
 
           {/* Button */}
           <div className="flex gap-4">
-
-            <button
-              className="
-              bg-indigo-500
-              hover:bg-indigo-600
-              text-white
-              px-10
-              py-3
-              rounded-lg
-              font-semibold
-              transition
-            "
-            >
-              Edit Profil
-            </button>
+            <Link href="profil/edit">
+              <button
+                className="
+                bg-indigo-500
+                hover:bg-indigo-600
+                text-white
+                px-10
+                py-3
+                rounded-lg
+                font-semibold
+                transition
+              "
+              >
+                Edit Profil
+              </button>
+            </Link>
 
             <button
               className="
