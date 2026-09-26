@@ -2,7 +2,7 @@ type Materi = [string, string, number, string];
 
 const MateriTable = ({ materiTerbaru }: { materiTerbaru: Materi[] }) => (
   <div className="bg-white overflow-x-auto w-92 md:w-full p-6 rounded-2xl shadow-sm">
-    {/* Header */}
+    
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
       <div>
         <p className="text-lg font-semibold">Materi Terakhir</p>
@@ -13,7 +13,6 @@ const MateriTable = ({ materiTerbaru }: { materiTerbaru: Materi[] }) => (
       </button>
     </div>
 
-    {/* Scrollable Table */}
     <div className="overflow-x-auto w-full">
       <table className="min-w-max w-full text-sm">
         <thead>

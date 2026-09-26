@@ -45,15 +45,19 @@ return(
 Rekap Materi Ajar : MikroTik
 </h1>
 
-<div className="mb-6">
-
-<Link
-href="/dashboard/rekap"
-className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold"
->
-+ Tambah Materi
-</Link>
-
+<div className="mb-6 flex gap-3">
+  <Link
+    href="/dashboard/rekap"
+    className="border border-gray-300 hover:bg-gray-100 text-gray-700 px-5 py-2.5 rounded-lg font-medium text-sm transition"
+  >
+    ← Kembali ke Rekap
+  </Link>
+  <Link
+    href="/dashboard/rekap/tambah"
+    className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium text-sm transition shadow-sm"
+  >
+    + Tambah Materi
+  </Link>
 </div>
 
 <div className="bg-white rounded-xl shadow border overflow-hidden">

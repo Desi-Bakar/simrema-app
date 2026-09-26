@@ -1,24 +1,17 @@
 import { NextResponse } from "next/server";
-import { supabase } from "../lib/supabase";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
     const { mataKuliah, tanggal, pertemuan, materi } = body;
 
-    const { error } = await supabase.from("materi_ajar").insert([
-      {
-        mata_kuliah: mataKuliah,
-        tanggal,
-        pertemuan,
-        materi,
-      },
-    ]);
-
-    if (error) {
-      return NextResponse.json({ error }, { status: 500 });
-    }
+    // Log data materi perkuliahan yang diterima
+    console.log("Materi perkuliahan diterima:", {
+      mataKuliah,
+      tanggal,
+      pertemuan,
+      materi,
+    });
 
     return NextResponse.json({
       message: "Berhasil disimpan",

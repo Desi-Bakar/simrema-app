@@ -28,15 +28,11 @@ export default function ForgotPasswordPage() {
         </div>
       </header>
 
-      {/* Content */}
-
       <div className="flex justify-center items-center py-20">
 
         <div className="bg-white rounded-xl border border-indigo-100 shadow-sm w-[900px] p-10">
 
           <div className="grid md:grid-cols-2 gap-10 items-center">
-
-            {/* Form */}
 
             <div>
 
@@ -68,31 +64,19 @@ export default function ForgotPasswordPage() {
                 >
                   Kembali ke Login
                 </Link>
-
               </div>
-
             </div>
-
-            {/* Gambar */}
-
             <div className="flex justify-center">
-
               <Image
                 src="/lupapassword.png"
                 alt="Forgot Password"
                 width={770}
                 height={770}
               />
-
             </div>
-
           </div>
-
         </div>
-
       </div>
-
-      {/* Footer */}
 
       <footer className="text-center text-gray-500 pb-6">
         ©2025 | Aplikasi Rekap Materi Mengajar Dosen.

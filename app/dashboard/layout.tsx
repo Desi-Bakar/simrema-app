@@ -11,7 +11,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Content */}
       <div className="flex-1 flex flex-col">
         <Navbar />
-        <main className="bg-gray-100 p-4 md:p-12 w-full max-w-full overflow-x-hidden">
+        {/* Ganti h-full dengan flex-1 di bawah ini */}
+        <main className="bg-gray-100 p-4 md:p-12 w-full max-w-full overflow-x-hidden flex-1">
           {children}
         </main>
       </div>

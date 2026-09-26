@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   useReactTable,
   getCoreRowModel,
@@ -31,9 +32,12 @@ const columns: ColumnDef<Materi>[] = [
   {
     header: "Aksi",
     cell: () => (
-      <button className="px-3 py-1 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600 transition">
+      <Link
+        href="/dashboard/rekap/id"
+        className="px-3 py-1 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600 transition inline-block"
+      >
         Lihat
-      </button>
+      </Link>
     ),
   },
 ];
@@ -54,9 +58,12 @@ export default function RekapTable() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
         <h2 className="text-xl md:text-2xl font-bold text-gray-800">Rekap Mata Kuliah</h2>
-        <button className="bg-green-500 text-white px-4 py-2 rounded-lg shadow hover:bg-green-600 transition">
+        <Link
+          href="/dashboard/rekap/tambah"
+          className="bg-green-500 text-white px-4 py-2 rounded-lg shadow hover:bg-green-600 transition inline-block font-medium"
+        >
           + Tambah Materi
-        </button>
+        </Link>
       </div>
 
       {/* Responsive Scrollable Table */}
