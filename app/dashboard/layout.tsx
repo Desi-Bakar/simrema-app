@@ -1,18 +1,13 @@
-import { Bell, User } from "lucide-react";
 import Sidebar from "../components/sidebar";
 import Navbar from "../components/navbar";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex w-full max-w-full min-h-screen">
-      {/* Sidebar */}
+    <div className="flex min-h-screen">
       <Sidebar />
-
-      {/* Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <Navbar />
-        {/* Ganti h-full dengan flex-1 di bawah ini */}
-        <main className="bg-gray-100 p-4 md:p-12 w-full max-w-full overflow-x-hidden flex-1">
+        <main className="flex-1 bg-gray-100 p-4 md:p-8">
           {children}
         </main>
       </div>

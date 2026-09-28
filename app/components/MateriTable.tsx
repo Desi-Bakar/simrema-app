@@ -1,46 +1,75 @@
-type Materi = [string, string, number, string];
+import Link from "next/link";
 
-const MateriTable = ({ materiTerbaru }: { materiTerbaru: Materi[] }) => (
-  <div className="bg-white overflow-x-auto w-92 md:w-full p-6 rounded-2xl shadow-sm">
-    
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
-      <div>
-        <p className="text-lg font-semibold">Materi Terakhir</p>
-        <p className="text-sm text-gray-500">Menampilkan 5 materi terakhir</p>
+export type MateriItem = {
+  tanggal: string;
+  matkul: string;
+  pertemuan: number;
+  materi: string;
+};
+
+export default function MateriTable({
+  materiTerbaru,
+}: {
+  materiTerbaru: MateriItem[];
+}) {
+  return (
+    <div className="w-full">
+      {/* Header Bagian */}
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-xl font-bold text-[#2D3748]">Materi Terakhir</h2>
+          <p className="text-sm text-[#718096] mt-0.5">
+            Menampilkan {materiTerbaru.length} materi terakhir
+          </p>
+        </div>
+        <Link
+          href="/dashboard/rekap"
+          className="text-sm font-semibold text-[#7E8FE8] hover:text-[#5469D4] transition-colors"
+        >
+          Lihat Semua Materi
+        </Link>
       </div>
-      <button className="text-indigo-600 text-sm hover:underline">
-        Lihat Semua Materi
-      </button>
-    </div>
 
-    <div className="overflow-x-auto w-full">
-      <table className="min-w-max w-full text-sm">
-        <thead>
-          <tr className="text-left text-gray-500 border-b border-gray-200">
-            <th className="py-3 px-4 whitespace-nowrap">Tanggal</th>
-            <th className="py-3 px-4 whitespace-nowrap">Mata Kuliah</th>
-            <th className="py-3 px-4 whitespace-nowrap">Pertemuan</th>
-            <th className="py-3 px-4 whitespace-nowrap">Materi</th>
-          </tr>
-        </thead>
-        <tbody>
-          {materiTerbaru.map((item, index) => (
-            <tr
-              key={index}
-              className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-            >
-              <td className="py-3 px-4 text-gray-700 whitespace-nowrap">
-                {item[0]}
-              </td>
-              <td className="px-4 text-gray-700 whitespace-nowrap">{item[1]}</td>
-              <td className="px-4 text-gray-700 whitespace-nowrap">{item[2]}</td>
-              <td className="px-4 text-indigo-600 whitespace-nowrap">{item[3]}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Tabel Card */}
+      <div className="w-full bg-white border border-[#DCE4F0] rounded-2xl shadow-xs overflow-hidden">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-[#FAFBFD] border-b border-[#EDF2F7] text-[#2D3748] text-sm font-bold">
+                <th className="py-4 px-6 border-r border-[#EDF2F7] whitespace-nowrap">
+                  Tanggal
+                </th>
+                <th className="py-4 px-6 border-r border-[#EDF2F7] whitespace-nowrap">
+                  Mata Kuliah
+                </th>
+                <th className="py-4 px-6 border-r border-[#EDF2F7] whitespace-nowrap">
+                  Pertemuan
+                </th>
+                <th className="py-4 px-6 whitespace-nowrap">Materi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#EDF2F7]">
+              {materiTerbaru.map((item, index) => (
+                <tr
+                  key={index}
+                  className="hover:bg-[#F8FAFC] transition-colors text-sm text-[#4A5568]"
+                >
+                  <td className="py-4 px-6 border-r border-[#EDF2F7] whitespace-nowrap">
+                    {item.tanggal}
+                  </td>
+                  <td className="py-4 px-6 border-r border-[#EDF2F7] whitespace-nowrap">
+                    {item.matkul}
+                  </td>
+                  <td className="py-4 px-6 border-r border-[#EDF2F7] whitespace-nowrap">
+                    {item.pertemuan}
+                  </td>
+                  <td className="py-4 px-6 whitespace-nowrap">{item.materi}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-  </div>
-);
-
-export default MateriTable;
+  );
+}

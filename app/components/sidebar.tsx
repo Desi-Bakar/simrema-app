@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import {
-  LayoutDashboard,
-  BookOpen,
+  LayoutGrid,
+  ClipboardList,
   GraduationCap,
   Users,
   User,
@@ -12,25 +13,19 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+
+const MENUS = [
+  { name: "Dashboard", path: "/dashboard", icon: LayoutGrid },
+  { name: "Rekap Materi Ajar", path: "/dashboard/rekap", icon: ClipboardList },
+  { name: "Mata Kuliah", path: "/dashboard/matakuliah", icon: GraduationCap },
+  { name: "Manajemen Pengguna", path: "/dashboard/users", icon: Users },
+  { name: "Profil", path: "/dashboard/profil", icon: User },
+];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setUserRole(parsed.role || null);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -38,54 +33,67 @@ export default function Sidebar() {
     router.push("/login");
   };
 
-  const menus = [
-    { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-    { name: "Rekap Materi Ajar", path: "/dashboard/rekap", icon: BookOpen },
-    { name: "Mata Kuliah", path: "/dashboard/matakuliah", icon: GraduationCap },
-    { name: "Manajemen Pengguna", path: "/dashboard/users", icon: Users },
-    { name: "Profil", path: "/dashboard/profil", icon: User },
-  ];
-
   return (
-    <div>
+    <>
+      {/* Tombol Hamburger di HP */}
       <button
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-indigo-600 text-white rounded-lg"
-        onClick={() => setOpen(true)}
+        type="button"
+        className="md:hidden fixed top-3 left-3 z-50 p-2 bg-[#5B6DD6] text-white rounded-md shadow"
+        onClick={() => setOpen(!open)}
+        aria-label="Toggle menu"
       >
-        <Menu size={20} />
+        {open ? <X size={20} /> : <Menu size={20} />}
       </button>
 
+      {/* Backdrop di HP */}
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-screen w-64 bg-gradient-to-b from-indigo-600 to-indigo-700 text-white p-5 shadow-lg transform transition-transform duration-300
-        ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:static flex flex-col justify-between`}
+        className={`w-64 bg-[#5B6DD6] text-white flex flex-col justify-between shrink-0 min-h-screen ${
+          open
+            ? "fixed inset-y-0 left-0 z-50"
+            : "max-md:hidden fixed inset-y-0 left-0 z-50 md:static"
+        }`}
       >
         <div>
-          <div className="flex justify-between items-center mb-10">
-            <Link href="/dashboard" className="block">
-              <img src="/simremalogo.png" alt="Simrema Logo" className="h-16" />
+          {/* Logo Area */}
+          <div className="pt-8 pb-6 px-6">
+            <Link href="/dashboard" className="block w-40 mx-auto">
+              <img
+                src="/simremalogo.png"
+                alt="SIMREMA"
+                className="w-full h-auto object-contain"
+              />
             </Link>
-            <button
-              className="md:hidden text-white"
-              onClick={() => setOpen(false)}
-            >
-              <X size={20} />
-            </button>
           </div>
 
-          <nav className="space-y-2">
-            {menus.map((menu, index) => {
-              const isActive = pathname === menu.path || (menu.path !== "/dashboard" && pathname.startsWith(menu.path));
+          {/* Navigasi Menu */}
+          <nav className="flex flex-col">
+            {MENUS.map((menu) => {
+              const isActive =
+                menu.path === "/dashboard"
+                  ? pathname === "/dashboard"
+                  : pathname.startsWith(menu.path);
               const Icon = menu.icon;
+
               return (
                 <Link
-                  key={index}
+                  key={menu.path}
                   href={menu.path}
-                  className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
-                    isActive ? "bg-white/20 font-semibold" : "hover:bg-white/10 text-white/80 hover:text-white"
-                  }`}
                   onClick={() => setOpen(false)}
+                  className={`flex items-center gap-3.5 px-6 py-3.5 text-sm font-semibold transition-colors ${
+                    isActive
+                      ? "bg-[#8796EF] text-white"
+                      : "text-white/90 hover:bg-white/10"
+                  }`}
                 >
-                  <Icon size={18} />
+                  <Icon size={22} className="shrink-0" />
                   <span>{menu.name}</span>
                 </Link>
               );
@@ -93,16 +101,18 @@ export default function Sidebar() {
           </nav>
         </div>
 
-        <div>
+        {/* Tombol Logout */}
+        <div className="p-6">
           <button
+            type="button"
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-white/10 hover:bg-white/20 text-white/90 hover:text-white transition-all duration-200"
+            className="flex items-center gap-3.5 text-sm font-semibold text-white/90 hover:text-white transition-colors"
           >
-            <LogOut size={18} />
+            <LogOut size={22} className="shrink-0" />
             <span>Logout</span>
           </button>
         </div>
       </aside>
-    </div>
+    </>
   );
 }

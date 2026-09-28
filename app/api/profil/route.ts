@@ -49,16 +49,54 @@ export async function GET(req: Request) {
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    const { email, nama, telepon, prodi, alamat } = body;
+    const { email, nama, telepon, prodi, alamat, foto, oldPassword, newPassword } = body;
 
-    if (!email || !nama) {
+    if (!email) {
       return NextResponse.json(
-        { message: "Email dan nama lengkap wajib diisi." },
+        { message: "Email wajib diisi." },
         { status: 400 }
       );
     }
 
-    // Upsert profil dosen
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { message: "User tidak ditemukan." },
+        { status: 404 }
+      );
+    }
+
+    // Ganti password jika request menyertakan newPassword
+    if (newPassword) {
+      if (user.password && oldPassword && user.password !== oldPassword) {
+        return NextResponse.json(
+          { message: "Password lama tidak sesuai." },
+          { status: 400 }
+        );
+      }
+
+      await prisma.user.update({
+        where: { email },
+        data: { password: newPassword },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: "Password berhasil diperbarui.",
+      });
+    }
+
+    // Update profil dosen
+    if (!nama) {
+      return NextResponse.json(
+        { message: "Nama lengkap wajib diisi." },
+        { status: 400 }
+      );
+    }
+
     const updatedProfil = await prisma.profilDosen.upsert({
       where: { email },
       update: {
@@ -66,6 +104,7 @@ export async function PUT(req: Request) {
         telepon: telepon || null,
         prodi: prodi || null,
         alamat: alamat || null,
+        foto: foto || undefined,
       },
       create: {
         email,
@@ -73,6 +112,7 @@ export async function PUT(req: Request) {
         telepon: telepon || null,
         prodi: prodi || null,
         alamat: alamat || null,
+        foto: foto || "/profil.png",
       },
     });
 
@@ -84,7 +124,7 @@ export async function PUT(req: Request) {
   } catch (error: any) {
     console.error("Error update profile:", error);
     return NextResponse.json(
-      { message: "Gagal memperbarui profil: " + error.message },
+      { message: "Gagal memperbarui: " + error.message },
       { status: 500 }
     );
   }
