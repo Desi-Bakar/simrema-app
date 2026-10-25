@@ -24,10 +24,11 @@ export async function POST(req: Request) {
       message: `Permintaan akses untuk ${email} telah ditolak.`,
       data: updatedUser,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error rejecting user:", error);
+    const message = error instanceof Error ? error.message : "Terjadi kesalahan";
     return NextResponse.json(
-      { message: "Gagal menolak user: " + error.message },
+      { message: "Gagal menolak user: " + message },
       { status: 500 }
     );
   }

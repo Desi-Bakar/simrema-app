@@ -102,8 +102,9 @@ export default function EditProfil() {
       setTimeout(() => {
         router.push("/dashboard/profil");
       }, 1000);
-    } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Terjadi kesalahan.";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -118,7 +119,7 @@ export default function EditProfil() {
       <div className="bg-white border border-indigo-200 rounded-xl shadow-sm p-6 md:p-10">
         {success && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
-            ✓ Profil berhasil disimpan! Mengalihkan kembali...
+            Profil berhasil disimpan. Mengalihkan kembali...
           </div>
         )}
 

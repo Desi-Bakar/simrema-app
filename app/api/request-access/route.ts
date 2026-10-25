@@ -70,10 +70,11 @@ export async function POST(req: Request) {
         status: newUser.status,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error request access:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { message: "Terjadi kesalahan pada server: " + (error?.message || "Unknown error") },
+      { message: "Terjadi kesalahan pada server: " + message },
       { status: 500 }
     );
   }

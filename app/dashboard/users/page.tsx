@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { UserCheck, UserX, Clock, Users as UsersIcon, ShieldCheck } from "lucide-react";
+import { UserCheck, UserX, Clock, Users as UsersIcon, ShieldCheck, Check, X } from "lucide-react";
 
 type UserItem = {
   email: string;
@@ -67,8 +67,9 @@ export default function UsersManagementPage() {
       } else {
         setToast({ message: resJson.message || "Gagal menyetujui user", type: "error" });
       }
-    } catch (err: any) {
-      setToast({ message: err.message || "Terjadi kesalahan", type: "error" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Terjadi kesalahan";
+      setToast({ message, type: "error" });
     } finally {
       setActionLoading(null);
     }
@@ -91,8 +92,9 @@ export default function UsersManagementPage() {
       } else {
         setToast({ message: resJson.message || "Gagal menolak user", type: "error" });
       }
-    } catch (err: any) {
-      setToast({ message: err.message || "Terjadi kesalahan", type: "error" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Terjadi kesalahan";
+      setToast({ message, type: "error" });
     } finally {
       setActionLoading(null);
     }
@@ -128,9 +130,10 @@ export default function UsersManagementPage() {
           <span>{toast.message}</span>
           <button
             onClick={() => setToast(null)}
-            className="text-gray-500 hover:text-gray-800 font-bold ml-4"
+            className="text-gray-500 hover:text-gray-800 ml-4 p-1"
+            aria-label="Tutup notifikasi"
           >
-            ✕
+            <X size={16} />
           </button>
         </div>
       )}
@@ -261,16 +264,18 @@ export default function UsersManagementPage() {
                           <button
                             onClick={() => handleApprove(user.email)}
                             disabled={actionLoading === user.email}
-                            className="bg-green-600 hover:bg-green-700 text-white px-3.5 py-1.5 rounded-lg font-medium text-xs shadow-sm transition disabled:opacity-50"
+                            className="bg-green-600 hover:bg-green-700 text-white px-3.5 py-1.5 rounded-lg font-medium text-xs shadow-sm transition disabled:opacity-50 inline-flex items-center gap-1.5"
                           >
-                            {actionLoading === user.email ? "..." : "✓ Setujui (ACC)"}
+                            <Check size={14} />
+                            <span>{actionLoading === user.email ? "Memproses..." : "Setujui"}</span>
                           </button>
                           <button
                             onClick={() => handleReject(user.email)}
                             disabled={actionLoading === user.email}
-                            className="bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-lg font-medium text-xs shadow-sm transition disabled:opacity-50"
+                            className="bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-lg font-medium text-xs shadow-sm transition disabled:opacity-50 inline-flex items-center gap-1.5"
                           >
-                            ✕ Tolak
+                            <X size={14} />
+                            <span>Tolak</span>
                           </button>
                         </div>
                       </td>

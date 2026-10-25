@@ -157,6 +157,74 @@ async function main() {
   console.log(`   Email: ${pendingDosen.email}`);
   console.log(`   Nama: ${pendingDosen.profilDosen?.nama}`);
   console.log(`   Status: ${pendingDosen.status}`);
+
+  // 4. Data Mata Kuliah & Rekap Materi Dosen
+  // Mata Kuliah untuk Budi Santoso (dosen@simrema.ac.id)
+  const matkulMikrotik = await prisma.mataKuliah.upsert({
+    where: { id: "mk-mikrotik-01" },
+    update: {
+      nama: "MikroTik",
+      kode: "NET-201",
+      sks: 3,
+      semester: "Ganjil 2025/2026",
+      dosenEmail: dosen.email,
+    },
+    create: {
+      id: "mk-mikrotik-01",
+      nama: "MikroTik",
+      kode: "NET-201",
+      sks: 3,
+      semester: "Ganjil 2025/2026",
+      dosenEmail: dosen.email,
+    },
+  });
+
+  const matkulCisco = await prisma.mataKuliah.upsert({
+    where: { id: "mk-cisco-02" },
+    update: {
+      nama: "CISCO",
+      kode: "NET-301",
+      sks: 3,
+      semester: "Ganjil 2025/2026",
+      dosenEmail: dosen.email,
+    },
+    create: {
+      id: "mk-cisco-02",
+      nama: "CISCO",
+      kode: "NET-301",
+      sks: 3,
+      semester: "Ganjil 2025/2026",
+      dosenEmail: dosen.email,
+    },
+  });
+
+  const matkulLinux = await prisma.mataKuliah.upsert({
+    where: { id: "mk-linux-03" },
+    update: {
+      nama: "Linux Server",
+      kode: "SYS-101",
+      sks: 3,
+      semester: "Ganjil 2025/2026",
+      dosenEmail: dosen.email,
+    },
+    create: {
+      id: "mk-linux-03",
+      nama: "Linux Server",
+      kode: "SYS-101",
+      sks: 3,
+      semester: "Ganjil 2025/2026",
+      dosenEmail: dosen.email,
+    },
+  });
+
+  // Kosongkan rekap materi agar mulai dari 0 data
+  await prisma.rekapMateri.deleteMany({});
+  console.log("ℹ️ Rekap materi dikosongkan (0 data).");
+
+  console.log(`✅ Mata Kuliah awal berhasil disiapkan dan di-assign ke dosen:`);
+  console.log(`   - ${matkulMikrotik.nama} (Dosen: ${dosen.email})`);
+  console.log(`   - ${matkulCisco.nama} (Dosen: ${dosen.email})`);
+  console.log(`   - ${matkulLinux.nama} (Dosen: ${dosen.email})`);
 }
 
 main()

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
 import { Image as ImageIcon, KeyRound } from "lucide-react";
 
 export default function ProfilPage() {
@@ -108,8 +109,9 @@ export default function ProfilPage() {
 
       setInitialProfile(profile);
       setToast({ type: "success", text: "Profil berhasil disimpan." });
-    } catch (err: any) {
-      setToast({ type: "error", text: err.message || "Terjadi kesalahan." });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Terjadi kesalahan.";
+      setToast({ type: "error", text: message });
     } finally {
       setLoading(false);
     }
@@ -148,8 +150,9 @@ export default function ProfilPage() {
 
       setPassword({ oldPassword: "", newPassword: "", confirmPassword: "" });
       setToast({ type: "success", text: "Password berhasil diperbarui." });
-    } catch (err: any) {
-      setToast({ type: "error", text: err.message || "Terjadi kesalahan." });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Terjadi kesalahan.";
+      setToast({ type: "error", text: message });
     } finally {
       setLoading(false);
     }
@@ -212,9 +215,12 @@ export default function ProfilPage() {
               {/* Kolom Kiri: Foto Avatar */}
               <div className="flex flex-col items-center">
                 <div className="w-36 h-36 rounded-full overflow-hidden bg-[#EEF2FC] border border-[#DCE4F0] flex items-center justify-center p-2.5 shadow-xs">
-                  <img
+                  <Image
                     src={profile.foto || "/profil.png"}
                     alt="Foto Profil"
+                    width={144}
+                    height={144}
+                    unoptimized
                     className="w-full h-full object-contain rounded-full"
                   />
                 </div>

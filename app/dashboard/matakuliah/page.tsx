@@ -1,160 +1,116 @@
 "use client";
 
-import Link from "next/link";
+import { useEffect, useState, useTransition } from "react";
+import { Plus, GraduationCap } from "lucide-react";
+import MatkulTable, { Matkul } from "./MatkulTable";
+import AddMatkulModal from "./AddMatkulModal";
 
-const dataMateri = [
-  {
-    tanggal: "01/01/2026",
-    matkul: "MikroTik",
-    pertemuan: 3,
-    materi: "IP Address",
-  },
-  {
-    tanggal: "01/01/2026",
-    matkul: "CISCO",
-    pertemuan: 6,
-    materi: "Routing",
-  },
-  {
-    tanggal: "01/01/2026",
-    matkul: "Linux Server",
-    pertemuan: 9,
-    materi: "Perintah Dasar CLI",
-  },
-  {
-    tanggal: "01/01/2026",
-    matkul: "Docker",
-    pertemuan: 4,
-    materi: "Container",
-  },
-  {
-    tanggal: "01/01/2026",
-    matkul: "Python",
-    pertemuan: 6,
-    materi: "Library Kunci",
-  },
-];
+export default function MataKuliahPage() {
+  const [user, setUser] = useState<{ email: string; role: string } | null>(null);
+  const [list, setList] = useState<Matkul[]>([]);
+  const [dosens, setDosens] = useState<Array<{ email: string; nama: string }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [modal, setModal] = useState(false);
+  const [, startTransition] = useTransition();
 
-export default function RekapPage() {
+  const load = async (uEmail: string, uRole: string) => {
+    try {
+      const res = await fetch(`/api/matakuliah?email=${encodeURIComponent(uEmail)}&role=${uRole}`);
+      const json = await res.json();
+      if (json.success) setList(json.data);
+
+      if (uRole === "ADMIN") {
+        const uRes = await fetch("/api/users");
+        const uJson = await uRes.json();
+        if (uJson.success) {
+          const dList = uJson.data.active.map((d: { email: string; profilDosen?: { nama: string } | null }) => ({
+            email: d.email,
+            nama: d.profilDosen?.nama || d.email,
+          }));
+          setDosens(dList);
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let ignore = false;
+    async function init() {
+      try {
+        const raw = localStorage.getItem("user");
+        if (raw) {
+          const u = JSON.parse(raw);
+          if (!ignore) setUser(u);
+          await load(u.email || "", u.role || "DOSEN");
+        } else if (!ignore) {
+          setLoading(false);
+        }
+      } catch {
+        if (!ignore) setLoading(false);
+      }
+    }
+    init();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const handleDel = async (id: string, nama: string) => {
+    if (!confirm(`Hapus mata kuliah "${nama}"?`)) return;
+    const res = await fetch(`/api/matakuliah?id=${id}`, { method: "DELETE" });
+    if (res.ok && user) startTransition(() => load(user.email, user.role));
+  };
+
+  const isAdmin = user?.role === "ADMIN";
+
   return (
-    <div className="p-8">
-
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-
-        <h1 className="text-4xl font-bold">
-          Rekap Mata Kuliah
-        </h1>
-
-        <Link
-          href="/dashboard/rekap"
-          className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg font-semibold"
-        >
-          + Tambah Materi
-        </Link>
-
-      </div>
-
-      {/* Table */}
-
-      <div className="bg-white rounded-xl border border-indigo-200 overflow-hidden shadow-sm">
-
-        <table className="w-full">
-
-          <thead className="bg-gray-50">
-
-            <tr>
-
-              <th className="py-4 px-6 text-left">Tanggal</th>
-
-              <th className="py-4 px-6 text-left">Mata Kuliah</th>
-
-              <th className="py-4 px-6 text-center">Pertemuan</th>
-
-              <th className="py-4 px-6 text-left">Materi</th>
-
-              <th className="py-4 px-6 text-center">Aksi</th>
-
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {dataMateri.map((item, index) => (
-
-              <tr
-                key={index}
-                className="border-t hover:bg-gray-50"
-              >
-
-                <td className="px-6 py-4">
-                  {item.tanggal}
-                </td>
-
-                <td className="px-6 py-4">
-                  {item.matkul}
-                </td>
-
-                <td className="px-6 py-4 text-center">
-                  {item.pertemuan}
-                </td>
-
-                <td className="px-6 py-4">
-                  {item.materi}
-                </td>
-
-                <td className="px-6 py-4 text-center">
-
-                  <Link
-                    href="/dashboard/rekap/detail"
-                    className="bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-2 rounded-lg"
-                  >
-                    Lihat
-                  </Link>
-
-                </td>
-
-              </tr>
-
-            ))}
-
-          </tbody>
-
-        </table>
-
-      </div>
-
-      {/* Footer Table */}
-
-      <div className="flex justify-between items-center mt-6">
-
-        <p className="text-gray-500">
-          Menampilkan 1 hingga 4 dari 7 data
-        </p>
-
-        <div className="flex gap-2">
-
-          <button className="border rounded-lg w-10 h-10">
-            &lt;
-          </button>
-
-          <button className="bg-indigo-500 text-white rounded-lg w-10 h-10">
-            1
-          </button>
-
-          <button className="border rounded-lg w-10 h-10">
-            3
-          </button>
-
-          <button className="border rounded-lg w-10 h-10">
-            &gt;
-          </button>
-
+    <div className="w-full space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#2D3748]">Mata Kuliah</h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {isAdmin ? "Kelola penugasan mata kuliah dosen" : "Mata kuliah yang ditugaskan kepada Anda"}
+          </p>
         </div>
-
+        {isAdmin && (
+          <button
+            onClick={() => setModal(true)}
+            className="inline-flex items-center gap-2 bg-[#52C463] hover:bg-[#43ad53] text-white px-5 py-2.5 rounded-lg shadow-xs font-semibold text-sm transition"
+          >
+            <Plus size={18} />
+            <span>Tambah Mata Kuliah</span>
+          </button>
+        )}
       </div>
 
+      <div className="w-full bg-white border border-[#DCE4F0] rounded-2xl shadow-xs overflow-hidden">
+        {loading ? (
+          <div className="p-8 text-center text-sm text-gray-500">Memuat data...</div>
+        ) : list.length === 0 ? (
+          <div className="p-12 text-center space-y-2">
+            <GraduationCap size={32} className="mx-auto text-gray-400" />
+            <h3 className="text-base font-semibold text-gray-700">Belum Ada Mata Kuliah</h3>
+            <p className="text-xs text-gray-500">
+              {isAdmin ? "Klik Tambah Mata Kuliah untuk meng-assign dosen." : "Belum ada mata kuliah yang di-assign kepada Anda."}
+            </p>
+          </div>
+        ) : (
+          <MatkulTable list={list} isAdmin={isAdmin} onDelete={handleDel} />
+        )}
+      </div>
+
+      {modal && (
+        <AddMatkulModal
+          dosens={dosens}
+          onClose={() => setModal(false)}
+          onSuccess={() => {
+            setModal(false);
+            if (user) startTransition(() => load(user.email, user.role));
+          }}
+        />
+      )}
     </div>
   );
 }

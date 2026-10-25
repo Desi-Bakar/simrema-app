@@ -18,6 +18,8 @@ model User {
   role        Role          @default(DOSEN)
   status      AccountStatus @default(PENDING)
   profilDosen ProfilDosen?
+  mataKuliah  MataKuliah[]
+  rekapMateri RekapMateri[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
@@ -38,6 +40,38 @@ model ProfilDosen {
   @@map("profil_dosen")
 }
 
+model MataKuliah {
+  id          String        @id @default(cuid())
+  kode        String?
+  nama        String
+  sks         Int?          @default(3)
+  semester    String?
+  dosenEmail  String
+  dosen       User          @relation(fields: [dosenEmail], references: [email], onDelete: Cascade)
+  rekapMateri RekapMateri[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("mata_kuliah")
+}
+
+model RekapMateri {
+  id           String     @id @default(cuid())
+  mataKuliahId String
+  mataKuliah   MataKuliah @relation(fields: [mataKuliahId], references: [id], onDelete: Cascade)
+  dosenEmail   String
+  dosen        User       @relation(fields: [dosenEmail], references: [email], onDelete: Cascade)
+  pertemuan    Int
+  tanggal      DateTime   @default(now())
+  materi       String
+  tugas        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([mataKuliahId, pertemuan])
+  @@map("rekap_materi")
+}
+
 enum Role {
   DOSEN
   ADMIN
@@ -48,3 +82,4 @@ enum AccountStatus {
   APPROVED
   REJECTED
 }
+

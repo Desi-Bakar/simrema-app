@@ -36,8 +36,9 @@ export default function LoginPage() {
 
       // Redirect ke dashboard
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Terjadi kesalahan.";
+      setError(message);
     } finally {
       setLoading(false);
     }

@@ -1,18 +1,21 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-gray-100">
-      
       {/* Navbar */}
       <nav className="flex justify-between items-center px-10 py-4 bg-white shadow">
-      <div className="flex items-center space-x-2">
-  <img
-    src="/simremalogo.png"
-    alt="Simrema Logo"
-    className="w-40"
-  />
-</div>
+        <div className="flex items-center space-x-2">
+          <Image
+            src="/simremalogo.png"
+            alt="Simrema Logo"
+            width={160}
+            height={40}
+            priority
+            className="w-40 h-auto"
+          />
+        </div>
         <div className="space-x-4">
           <Link
             href="/login"
@@ -20,19 +23,11 @@ export default function Home() {
           >
             Login
           </Link>
-{/* 
-          <Link
-            href="/register"
-            className="px-4 py-2 bg-green-500 text-white rounded inline-block"
-          >
-            Daftar
-          </Link> */}
         </div>
       </nav>
 
       {/* Hero Section */}
       <section className="flex items-center justify-between px-10 py-20">
-        
         {/* Kiri */}
         <div className="max-w-xl">
           <h2 className="text-6xl font-bold text-gray-800 mb-4">
@@ -50,24 +45,25 @@ export default function Home() {
             </Link>
 
             <Link
-              href="/register"
+              href="/request-access"
               className="px-6 py-2 bg-green-500 text-white rounded-lg inline-block"
             >
               Request Access
-            </Link> 
+            </Link>
           </div>
         </div>
         {/* Kanan (Gambar) */}
         <div>
-          <img
+          <Image
             src="/ilustrasihome.png"
             alt="ilustrasihome"
-            className="w-[800px]"
+            width={800}
+            height={550}
+            priority
+            className="w-[800px] h-auto object-contain"
           />
         </div>
-
       </section>
-
     </main>
   );
 }

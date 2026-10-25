@@ -31,10 +31,11 @@ export async function POST(req: Request) {
       message: `Akses untuk ${updatedUser.profilDosen?.nama || email} berhasil disetujui (ACC). Password awal: ${assignedPassword}`,
       data: updatedUser,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error approving user:", error);
+    const message = error instanceof Error ? error.message : "Terjadi kesalahan";
     return NextResponse.json(
-      { message: "Gagal menyetujui user: " + error.message },
+      { message: "Gagal menyetujui user: " + message },
       { status: 500 }
     );
   }

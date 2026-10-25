@@ -31,10 +31,11 @@ export async function GET() {
         },
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching users:", error);
+    const message = error instanceof Error ? error.message : "Terjadi kesalahan";
     return NextResponse.json(
-      { message: "Gagal mengambil data user: " + error.message },
+      { message: "Gagal mengambil data user: " + message },
       { status: 500 }
     );
   }

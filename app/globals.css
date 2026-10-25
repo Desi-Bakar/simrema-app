@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 body {
-  font-family: 'Instrument Sans', sans-serif;
   background-color: #ffffff;
   color: #171717;
 }

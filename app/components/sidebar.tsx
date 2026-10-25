@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
@@ -65,9 +66,12 @@ export default function Sidebar() {
           {/* Logo Area */}
           <div className="pt-8 pb-6 px-6">
             <Link href="/dashboard" className="block w-40 mx-auto">
-              <img
+              <Image
                 src="/simremalogo.png"
                 alt="SIMREMA"
+                width={160}
+                height={40}
+                priority
                 className="w-full h-auto object-contain"
               />
             </Link>

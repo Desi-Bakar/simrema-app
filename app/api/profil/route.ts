@@ -37,10 +37,11 @@ export async function GET(req: Request) {
         foto: user.profilDosen?.foto || "/profil.png",
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error get profile:", error);
+    const message = error instanceof Error ? error.message : "Terjadi kesalahan sistem";
     return NextResponse.json(
-      { message: "Terjadi kesalahan: " + error.message },
+      { message: "Terjadi kesalahan: " + message },
       { status: 500 }
     );
   }
@@ -121,10 +122,11 @@ export async function PUT(req: Request) {
       message: "Profil berhasil diperbarui.",
       data: updatedProfil,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error update profile:", error);
+    const message = error instanceof Error ? error.message : "Terjadi kesalahan";
     return NextResponse.json(
-      { message: "Gagal memperbarui: " + error.message },
+      { message: "Gagal memperbarui: " + message },
       { status: 500 }
     );
   }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Check } from "lucide-react";
 import Navbar from "../components/navbar";
 
 export default function RequestAccessPage() {
@@ -47,8 +48,9 @@ export default function RequestAccessPage() {
       }
 
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan koneksi.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Terjadi kesalahan koneksi.";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -71,10 +73,10 @@ export default function RequestAccessPage() {
 
             {success ? (
               <div className="bg-green-50 border border-green-200 text-green-800 rounded-lg p-6 text-center space-y-4">
-                <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
-                  ✓
+                <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
+                  <Check size={24} />
                 </div>
-                <h3 className="text-lg font-semibold">Request Berhasil Diajukan!</h3>
+                <h3 className="text-lg font-semibold">Request Berhasil Diajukan</h3>
                 <p className="text-sm text-gray-600">
                   Data Anda atas nama <strong>{formData.namaLengkap}</strong> dengan email <strong>{formData.alamatEmail}</strong> dan nomor <strong>{formData.nomorTelepon}</strong> telah tersimpan dengan status <strong>Menunggu Persetujuan Admin</strong>.
                 </p>

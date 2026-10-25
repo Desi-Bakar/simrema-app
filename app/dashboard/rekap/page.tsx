@@ -1,128 +1,139 @@
 "use client";
 
 import Link from "next/link";
-import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-  ColumnDef,
-} from "@tanstack/react-table";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Plus, ClipboardList } from "lucide-react";
 
-type Materi = {
+type RekapRow = {
+  id: string;
   tanggal: string;
-  mataKuliah: string;
   pertemuan: number;
   materi: string;
+  mataKuliah?: { id: string; nama: string };
 };
 
-const data: Materi[] = [
-  { tanggal: "01/01/2026", mataKuliah: "MikroTik", pertemuan: 3, materi: "IP Address" },
-  { tanggal: "01/01/2026", mataKuliah: "CISCO", pertemuan: 6, materi: "Routing" },
-  { tanggal: "01/01/2026", mataKuliah: "Linux Server", pertemuan: 9, materi: "Perintah Dasar CLI" },
-  { tanggal: "01/01/2026", mataKuliah: "Docker", pertemuan: 4, materi: "Container" },
-  { tanggal: "01/01/2026", mataKuliah: "Python", pertemuan: 6, materi: "Library Kunci" },
-];
-
-const columns: ColumnDef<Materi>[] = [
-  { header: "Tanggal", accessorKey: "tanggal" },
-  { header: "Mata Kuliah", accessorKey: "mataKuliah" },
-  { header: "Pertemuan", accessorKey: "pertemuan" },
-  { header: "Materi", accessorKey: "materi" },
-  {
-    header: "Aksi",
-    cell: () => (
-      <Link
-        href="/dashboard/rekap/id"
-        className="px-3 py-1 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600 transition inline-block"
-      >
-        Lihat
-      </Link>
-    ),
-  },
-];
-
 export default function RekapTable() {
+  const [data, setData] = useState<RekapRow[]>([]);
+  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const pageSize = 4;
-  const paginatedData = data.slice((page - 1) * pageSize, page * pageSize);
+  const pageSize = 5;
 
-  const table = useReactTable({
-    data: paginatedData,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
+  useEffect(() => {
+    let ignore = false;
+    async function fetchRekap() {
+      try {
+        const stored = localStorage.getItem("user");
+        const user = stored ? JSON.parse(stored) : null;
+        const res = await fetch(`/api/materi?email=${encodeURIComponent(user?.email || "")}&role=${user?.role || "DOSEN"}`);
+        const json = await res.json();
+        if (!ignore && json.success && Array.isArray(json.data)) {
+          setData(json.data);
+        }
+      } catch {
+        // ignore
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+    fetchRekap();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
+  const rows = data.slice((page - 1) * pageSize, page * pageSize);
 
   return (
-    <div className="w-92 md:w-full max-w-full mx-auto bg-white shadow-lg rounded-xl p-4 md:p-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
-        <h2 className="text-xl md:text-2xl font-bold text-gray-800">Rekap Mata Kuliah</h2>
+    <div className="w-full space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#2D3748]">Rekap Mata Kuliah</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Daftar rekapitulasi materi ajar perkuliahan dosen</p>
+        </div>
         <Link
           href="/dashboard/rekap/tambah"
-          className="bg-green-500 text-white px-4 py-2 rounded-lg shadow hover:bg-green-600 transition inline-block font-medium"
+          className="inline-flex items-center gap-2 bg-[#52C463] hover:bg-[#43ad53] text-white px-5 py-2.5 rounded-lg shadow-xs font-semibold text-sm transition"
         >
-          + Tambah Materi
+          <Plus size={18} />
+          <span>Tambah Materi</span>
         </Link>
       </div>
 
-      {/* Responsive Scrollable Table */}
-      <div className="overflow-x-auto w-full">
-        <table className="min-w-max w-full text-sm text-left text-gray-700">
-          <thead className="bg-gray-50 text-gray-900">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className="px-4 md:px-6 py-3 font-semibold whitespace-nowrap"
-                  >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-100 transition-colors">
-                {row.getVisibleCells().map((cell) => (
-                  <td
-                    key={cell.id}
-                    className="px-4 md:px-6 py-3 border-t whitespace-nowrap"
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <div className="w-full bg-white border border-[#DCE4F0] rounded-2xl shadow-xs overflow-hidden">
+        {loading ? (
+          <div className="p-8 text-center text-sm text-gray-500">Memuat rekap materi...</div>
+        ) : data.length === 0 ? (
+          <div className="p-12 text-center space-y-2">
+            <ClipboardList size={32} className="mx-auto text-gray-400" />
+            <h3 className="text-base font-semibold text-gray-700">Belum Ada Rekap Materi</h3>
+            <p className="text-xs text-gray-500">Belum ada catatan pertemuan yang tersimpan.</p>
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left text-sm border-collapse">
+                <thead>
+                  <tr className="bg-[#FAFBFD] border-b border-[#EDF2F7] text-[#2D3748] font-bold">
+                    <th className="py-4 px-6 border-r border-[#EDF2F7]">Tanggal</th>
+                    <th className="py-4 px-6 border-r border-[#EDF2F7]">Mata Kuliah</th>
+                    <th className="py-4 px-6 border-r border-[#EDF2F7] text-center">Pertemuan</th>
+                    <th className="py-4 px-6 border-r border-[#EDF2F7]">Materi</th>
+                    <th className="py-4 px-6 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#EDF2F7] text-[#4A5568]">
+                  {rows.map((item) => (
+                    <tr key={item.id} className="hover:bg-[#F8FAFC]">
+                      <td className="py-4 px-6 border-r border-[#EDF2F7] font-medium text-gray-800">
+                        {new Date(item.tanggal).toLocaleDateString("id-ID")}
+                      </td>
+                      <td className="py-4 px-6 border-r border-[#EDF2F7]">{item.mataKuliah?.nama || "-"}</td>
+                      <td className="py-4 px-6 border-r border-[#EDF2F7] text-center font-semibold text-gray-700">
+                        {item.pertemuan}
+                      </td>
+                      <td className="py-4 px-6 border-r border-[#EDF2F7]">{item.materi}</td>
+                      <td className="py-4 px-6 text-center whitespace-nowrap">
+                        <Link
+                          href={`/dashboard/rekap/edit?pertemuan=${item.pertemuan}&tanggal=${encodeURIComponent(new Date(item.tanggal).toISOString().split("T")[0])}&materi=${encodeURIComponent(item.materi)}`}
+                          className="px-4 py-1.5 text-xs font-semibold text-white bg-[#5B6DD6] hover:bg-[#4858B8] rounded-lg transition inline-block shadow-xs"
+                        >
+                          Lihat / Edit
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-      {/* Pagination */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mt-4 gap-3">
-        <span className="text-gray-600 text-sm">
-          Menampilkan {(page - 1) * pageSize + 1} hingga{" "}
-          {Math.min(page * pageSize, data.length)} dari {data.length} data
-        </span>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setPage((p) => Math.max(p - 1, 1))}
-            disabled={page === 1}
-            className="px-3 md:px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-          >
-            Prev
-          </button>
-          <button
-            onClick={() => setPage((p) => Math.min(p + 1, Math.ceil(data.length / pageSize)))}
-            disabled={page === Math.ceil(data.length / pageSize)}
-            className="px-3 md:px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center px-6 py-4 bg-[#FAFBFD] border-t border-[#EDF2F7] gap-3">
+              <span className="text-gray-600 text-xs md:text-sm">
+                Menampilkan {(page - 1) * pageSize + 1} hingga {Math.min(page * pageSize, data.length)} dari {data.length} data
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1.5 border border-[#CCD7ED] rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-40"
+                >
+                  Prev
+                </button>
+                <span className="text-xs font-bold text-gray-600 px-2">{page} / {totalPages}</span>
+                <button
+                  onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={page === totalPages}
+                  className="px-3 py-1.5 border border-[#CCD7ED] rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-40"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 }
+
+
