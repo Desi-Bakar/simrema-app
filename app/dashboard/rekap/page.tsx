@@ -9,6 +9,7 @@ type RekapRow = {
   tanggal: string;
   pertemuan: number;
   materi: string;
+  tugas?: string | null;
   mataKuliah?: { id: string; nama: string };
 };
 
@@ -88,14 +89,25 @@ export default function RekapTable() {
                       <td className="py-4 px-6 border-r border-[#EDF2F7] font-medium text-gray-800">
                         {new Date(item.tanggal).toLocaleDateString("id-ID")}
                       </td>
-                      <td className="py-4 px-6 border-r border-[#EDF2F7]">{item.mataKuliah?.nama || "-"}</td>
+                      <td className="py-4 px-6 border-r border-[#EDF2F7]">
+                        {item.mataKuliah ? (
+                          <Link
+                            href={`/dashboard/rekap/id?matkulId=${item.mataKuliah.id}&matkulNama=${encodeURIComponent(item.mataKuliah.nama)}`}
+                            className="text-[#5B6DD6] hover:underline font-medium"
+                          >
+                            {item.mataKuliah.nama}
+                          </Link>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
                       <td className="py-4 px-6 border-r border-[#EDF2F7] text-center font-semibold text-gray-700">
                         {item.pertemuan}
                       </td>
                       <td className="py-4 px-6 border-r border-[#EDF2F7]">{item.materi}</td>
                       <td className="py-4 px-6 text-center whitespace-nowrap">
                         <Link
-                          href={`/dashboard/rekap/edit?pertemuan=${item.pertemuan}&tanggal=${encodeURIComponent(new Date(item.tanggal).toISOString().split("T")[0])}&materi=${encodeURIComponent(item.materi)}`}
+                          href={`/dashboard/rekap/edit?id=${item.id}&matkulId=${item.mataKuliah?.id || ""}&pertemuan=${item.pertemuan}&tanggal=${encodeURIComponent(new Date(item.tanggal).toISOString().split("T")[0])}&materi=${encodeURIComponent(item.materi)}&tugas=${encodeURIComponent(item.tugas || "")}`}
                           className="px-4 py-1.5 text-xs font-semibold text-white bg-[#5B6DD6] hover:bg-[#4858B8] rounded-lg transition inline-block shadow-xs"
                         >
                           Lihat / Edit

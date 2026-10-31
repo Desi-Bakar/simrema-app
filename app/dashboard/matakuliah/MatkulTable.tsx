@@ -37,7 +37,14 @@ export default function MatkulTable({ list, isAdmin, onDelete }: MatkulTableProp
           {list.map((m) => (
             <tr key={m.id} className="hover:bg-[#F8FAFC]">
               <td className="py-4 px-6 border-r border-[#EDF2F7] font-semibold text-gray-800">{m.kode || "-"}</td>
-              <td className="py-4 px-6 border-r border-[#EDF2F7] font-medium text-gray-900">{m.nama}</td>
+              <td className="py-4 px-6 border-r border-[#EDF2F7] font-medium text-gray-900">
+                <Link
+                  href={`/dashboard/rekap/id?matkulId=${m.id}&matkulNama=${encodeURIComponent(m.nama)}`}
+                  className="hover:text-[#5B6DD6] transition hover:underline"
+                >
+                  {m.nama}
+                </Link>
+              </td>
               <td className="py-4 px-6 border-r border-[#EDF2F7] text-center">{m.sks || 3}</td>
               <td className="py-4 px-6 border-r border-[#EDF2F7]">
                 <div className="flex items-center gap-2">
@@ -49,10 +56,21 @@ export default function MatkulTable({ list, isAdmin, onDelete }: MatkulTableProp
                 </div>
               </td>
               <td className="py-4 px-6 border-r border-[#EDF2F7] text-center font-bold text-[#5B6DD6]">
-                {m._count?.rekapMateri ?? 0}
+                <Link
+                  href={`/dashboard/rekap/id?matkulId=${m.id}&matkulNama=${encodeURIComponent(m.nama)}`}
+                  className="hover:underline"
+                >
+                  {m._count?.rekapMateri ?? 0}
+                </Link>
               </td>
               <td className="py-4 px-6 text-center whitespace-nowrap">
                 <div className="inline-flex items-center gap-2">
+                  <Link
+                    href={`/dashboard/rekap/id?matkulId=${m.id}&matkulNama=${encodeURIComponent(m.nama)}`}
+                    className="px-3 py-1 text-xs font-semibold text-white bg-[#5B6DD6] hover:bg-[#4858B8] rounded-lg shadow-xs"
+                  >
+                    Lihat
+                  </Link>
                   <Link
                     href={`/dashboard/rekap/tambah?matkulId=${m.id}&matkulNama=${encodeURIComponent(m.nama)}`}
                     className="px-3 py-1 text-xs font-semibold text-white bg-[#52C463] hover:bg-[#43ad53] rounded-lg shadow-xs"
