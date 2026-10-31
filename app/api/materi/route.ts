@@ -58,7 +58,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Mata kuliah tidak ditemukan." }, { status: 404 });
     }
 
-    const assignedDosen = dosenEmail || matkul.dosenEmail;
+    const user = dosenEmail ? await prisma.user.findUnique({ where: { email: dosenEmail } }) : null;
+    const assignedDosen = user ? user.email : matkul.dosenEmail;
     const nomor = Number(pertemuan) || 1;
     const tgl = tanggal ? new Date(tanggal) : new Date();
 
@@ -130,6 +131,10 @@ export async function PUT(req: Request) {
       data: updated,
     });
   } catch (error: unknown) {
+    console.error("Error update materi:", error);
+    if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
+      return NextResponse.json({ message: "Pertemuan ini sudah ada untuk mata kuliah tersebut." }, { status: 409 });
+    }
     const message = error instanceof Error ? error.message : "Terjadi kesalahan";
     return NextResponse.json({ message }, { status: 500 });
   }
@@ -144,6 +149,10 @@ export async function DELETE(req: Request) {
     await prisma.rekapMateri.delete({ where: { id } });
     return NextResponse.json({ success: true, message: "Berhasil dihapus." });
   } catch (error: unknown) {
+    console.error("Error delete materi:", error);
+    if (error && typeof error === "object" && "code" in error && error.code === "P2025") {
+      return NextResponse.json({ message: "Rekap materi tidak ditemukan." }, { status: 404 });
+    }
     const message = error instanceof Error ? error.message : "Terjadi kesalahan";
     return NextResponse.json({ message }, { status: 500 });
   }
