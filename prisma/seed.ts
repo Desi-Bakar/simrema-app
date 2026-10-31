@@ -217,9 +217,72 @@ async function main() {
     },
   });
 
-  // Kosongkan rekap materi agar mulai dari 0 data
+  const matkulDocker = await prisma.mataKuliah.upsert({
+    where: { id: "mk-docker-04" },
+    update: {
+      nama: "Docker",
+      kode: "SYS-201",
+      sks: 3,
+      semester: "Ganjil 2025/2026",
+      dosenEmail: dosen.email,
+    },
+    create: {
+      id: "mk-docker-04",
+      nama: "Docker",
+      kode: "SYS-201",
+      sks: 3,
+      semester: "Ganjil 2025/2026",
+      dosenEmail: dosen.email,
+    },
+  });
+
+  const matkulPython = await prisma.mataKuliah.upsert({
+    where: { id: "mk-python-05" },
+    update: {
+      nama: "Python",
+      kode: "PROG-102",
+      sks: 3,
+      semester: "Ganjil 2025/2026",
+      dosenEmail: dosen.email,
+    },
+    create: {
+      id: "mk-python-05",
+      nama: "Python",
+      kode: "PROG-102",
+      sks: 3,
+      semester: "Ganjil 2025/2026",
+      dosenEmail: dosen.email,
+    },
+  });
+
+  // Seed 7 rekap materi sesuai tampilan
   await prisma.rekapMateri.deleteMany({});
-  console.log("ℹ️ Rekap materi dikosongkan (0 data).");
+  const initialDate = new Date("2026-01-01T00:00:00.000Z");
+
+  const sampleRekaps = [
+    { matkulId: matkulMikrotik.id, pertemuan: 3, materi: "IP Address", tugas: "Konfigurasi IP Static" },
+    { matkulId: matkulCisco.id, pertemuan: 6, materi: "Routing", tugas: "Dynamic Routing OSPF" },
+    { matkulId: matkulLinux.id, pertemuan: 9, materi: "Perintah Dasar CLI", tugas: "Manajemen User & File Permission" },
+    { matkulId: matkulDocker.id, pertemuan: 4, materi: "Container", tugas: "Build Custom Dockerfile" },
+    { matkulId: matkulPython.id, pertemuan: 6, materi: "Library Kunci", tugas: "Eksplorasi Modul Standard" },
+    { matkulId: matkulDocker.id, pertemuan: 5, materi: "Docker Compose", tugas: "Deploy Multi-container App" },
+    { matkulId: matkulPython.id, pertemuan: 7, materi: "Library Pandas", tugas: "Analisis Dataset CSV" },
+  ];
+
+  for (const item of sampleRekaps) {
+    await prisma.rekapMateri.create({
+      data: {
+        mataKuliahId: item.matkulId,
+        dosenEmail: dosen.email,
+        pertemuan: item.pertemuan,
+        tanggal: initialDate,
+        materi: item.materi,
+        tugas: item.tugas,
+      },
+    });
+  }
+
+  console.log(`✅ 7 Data Rekap Materi awal berhasil disiapkan sesuai desain.`);
 
   console.log(`✅ Mata Kuliah awal berhasil disiapkan dan di-assign ke dosen:`);
   console.log(`   - ${matkulMikrotik.nama} (Dosen: ${dosen.email})`);

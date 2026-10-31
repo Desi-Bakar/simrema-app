@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { UserCheck, UserX, Clock, Users as UsersIcon, ShieldCheck, Check, X } from "lucide-react";
 
 type UserItem = {
@@ -15,6 +16,8 @@ type UserItem = {
 };
 
 export default function UsersManagementPage() {
+  const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<{
     pending: UserItem[];
@@ -47,8 +50,27 @@ export default function UsersManagementPage() {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    try {
+      const raw = localStorage.getItem("user");
+      const u = raw ? JSON.parse(raw) : null;
+      if (u?.role !== "ADMIN") {
+        router.replace("/dashboard");
+        return;
+      }
+      setIsAdmin(true);
+      fetchUsers();
+    } catch {
+      router.replace("/dashboard");
+    }
+  }, [router]);
+
+  if (!loading && !isAdmin) {
+    return (
+      <div className="p-8 text-center text-sm text-gray-500">
+        Halaman ini khusus Administrator.
+      </div>
+    );
+  }
 
   const handleApprove = async (email: string) => {
     if (!confirm(`Setujui (ACC) permohonan akses untuk ${email}? Akun akan diberikan password awal "dosen123".`)) return;

@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, GraduationCap } from "lucide-react";
 import MatkulTable, { Matkul } from "./MatkulTable";
 import AddMatkulModal from "./AddMatkulModal";
 
 export default function MataKuliahPage() {
+  const router = useRouter();
   const [user, setUser] = useState<{ email: string; role: string } | null>(null);
   const [list, setList] = useState<Matkul[]>([]);
   const [dosens, setDosens] = useState<Array<{ email: string; nama: string }>>([]);
@@ -42,20 +44,24 @@ export default function MataKuliahPage() {
         const raw = localStorage.getItem("user");
         if (raw) {
           const u = JSON.parse(raw);
+          if (u.role !== "ADMIN") {
+            router.replace("/dashboard");
+            return;
+          }
           if (!ignore) setUser(u);
-          await load(u.email || "", u.role || "DOSEN");
-        } else if (!ignore) {
-          setLoading(false);
+          await load(u.email || "", u.role);
+        } else {
+          router.replace("/login");
         }
       } catch {
-        if (!ignore) setLoading(false);
+        router.replace("/dashboard");
       }
     }
     init();
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [router]);
 
   const handleDel = async (id: string, nama: string) => {
     if (!confirm(`Hapus mata kuliah "${nama}"?`)) return;
@@ -64,6 +70,14 @@ export default function MataKuliahPage() {
   };
 
   const isAdmin = user?.role === "ADMIN";
+
+  if (!loading && !isAdmin) {
+    return (
+      <div className="p-8 text-center text-sm text-gray-500">
+        Halaman ini khusus Administrator.
+      </div>
+    );
+  }
 
   return (
     <div className="w-full space-y-6">

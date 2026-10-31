@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   LayoutGrid,
   ClipboardList,
@@ -18,8 +18,8 @@ import {
 const MENUS = [
   { name: "Dashboard", path: "/dashboard", icon: LayoutGrid },
   { name: "Rekap Materi Ajar", path: "/dashboard/rekap", icon: ClipboardList },
-  { name: "Mata Kuliah", path: "/dashboard/matakuliah", icon: GraduationCap },
-  { name: "Manajemen Pengguna", path: "/dashboard/users", icon: Users },
+  { name: "Mata Kuliah", path: "/dashboard/matakuliah", icon: GraduationCap, adminOnly: true },
+  { name: "Manajemen Pengguna", path: "/dashboard/users", icon: Users, adminOnly: true },
   { name: "Profil", path: "/dashboard/profil", icon: User },
 ];
 
@@ -27,6 +27,24 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [role, setRole] = useState<string>("");
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        const u = JSON.parse(stored);
+        setRole(u?.role || "DOSEN");
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const visibleMenus = MENUS.filter((menu) => {
+    if (menu.adminOnly && role !== "ADMIN") return false;
+    return true;
+  });
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -79,7 +97,7 @@ export default function Sidebar() {
 
           {/* Navigasi Menu */}
           <nav className="flex flex-col">
-            {MENUS.map((menu) => {
+            {visibleMenus.map((menu) => {
               const isActive =
                 menu.path === "/dashboard"
                   ? pathname === "/dashboard"

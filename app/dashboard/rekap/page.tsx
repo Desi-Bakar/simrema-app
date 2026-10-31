@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Plus, ClipboardList } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 
 type RekapRow = {
   id: string;
@@ -13,57 +13,77 @@ type RekapRow = {
   mataKuliah?: { id: string; nama: string };
 };
 
+function formatDate(d: string | Date) {
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return "-";
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 export default function RekapTable() {
   const [data, setData] = useState<RekapRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const pageSize = 5;
 
-  useEffect(() => {
-    let ignore = false;
-    async function fetchRekap() {
-      try {
-        const stored = localStorage.getItem("user");
-        const user = stored ? JSON.parse(stored) : null;
-        const res = await fetch(`/api/materi?email=${encodeURIComponent(user?.email || "")}&role=${user?.role || "DOSEN"}`);
-        const json = await res.json();
-        if (!ignore && json.success && Array.isArray(json.data)) {
-          setData(json.data);
-        }
-      } catch {
-        // ignore
-      } finally {
-        if (!ignore) setLoading(false);
+  const fetchRekap = async () => {
+    try {
+      const stored = localStorage.getItem("user");
+      const user = stored ? JSON.parse(stored) : null;
+      const res = await fetch(
+        `/api/materi?email=${encodeURIComponent(user?.email || "")}&role=${user?.role || "DOSEN"}`
+      );
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setData(json.data);
       }
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchRekap();
-    return () => {
-      ignore = true;
-    };
   }, []);
+
+  const handleDelete = async (id: string, pertemuan: number) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus materi pertemuan ${pertemuan}?`)) return;
+    try {
+      const res = await fetch(`/api/materi?id=${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setData((prev) => prev.filter((item) => item.id !== id));
+      } else {
+        alert("Gagal menghapus materi.");
+      }
+    } catch {
+      alert("Terjadi kesalahan koneksi.");
+    }
+  };
 
   const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
   const rows = data.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-[#2D3748]">Rekap Mata Kuliah</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Daftar rekapitulasi materi ajar perkuliahan dosen</p>
-        </div>
+      {/* Header persis gambar */}
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-black tracking-tight">Rekap Mata Kuliah</h1>
         <Link
           href="/dashboard/rekap/tambah"
-          className="inline-flex items-center gap-2 bg-[#52C463] hover:bg-[#43ad53] text-white px-5 py-2.5 rounded-lg shadow-xs font-semibold text-sm transition"
+          className="inline-flex items-center justify-center bg-[#3BB75E] hover:bg-[#34a353] text-white font-semibold text-base px-6 py-2.5 rounded-xl transition shadow-xs"
         >
-          <Plus size={18} />
-          <span>Tambah Materi</span>
+          <span>+ Tambah Materi</span>
         </Link>
       </div>
 
-      <div className="w-full bg-white border border-[#DCE4F0] rounded-2xl shadow-xs overflow-hidden">
+      {/* Tabel Cardbox persis gambar */}
+      <div className="w-full bg-white border border-[#D5E1F9] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-sm text-gray-500">Memuat rekap materi...</div>
+          <div className="p-10 text-center text-sm text-gray-500">Memuat rekap materi...</div>
         ) : data.length === 0 ? (
           <div className="p-12 text-center space-y-2">
             <ClipboardList size={32} className="mx-auto text-gray-400" />
@@ -71,79 +91,96 @@ export default function RekapTable() {
             <p className="text-xs text-gray-500">Belum ada catatan pertemuan yang tersimpan.</p>
           </div>
         ) : (
-          <>
-            <div className="overflow-x-auto w-full">
-              <table className="w-full text-left text-sm border-collapse">
-                <thead>
-                  <tr className="bg-[#FAFBFD] border-b border-[#EDF2F7] text-[#2D3748] font-bold">
-                    <th className="py-4 px-6 border-r border-[#EDF2F7]">Tanggal</th>
-                    <th className="py-4 px-6 border-r border-[#EDF2F7]">Mata Kuliah</th>
-                    <th className="py-4 px-6 border-r border-[#EDF2F7] text-center">Pertemuan</th>
-                    <th className="py-4 px-6 border-r border-[#EDF2F7]">Materi</th>
-                    <th className="py-4 px-6 text-center">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#EDF2F7] text-[#4A5568]">
-                  {rows.map((item) => (
-                    <tr key={item.id} className="hover:bg-[#F8FAFC]">
-                      <td className="py-4 px-6 border-r border-[#EDF2F7] font-medium text-gray-800">
-                        {new Date(item.tanggal).toLocaleDateString("id-ID")}
-                      </td>
-                      <td className="py-4 px-6 border-r border-[#EDF2F7]">
-                        {item.mataKuliah ? (
-                          <Link
-                            href={`/dashboard/rekap/id?matkulId=${item.mataKuliah.id}&matkulNama=${encodeURIComponent(item.mataKuliah.nama)}`}
-                            className="text-[#5B6DD6] hover:underline font-medium"
-                          >
-                            {item.mataKuliah.nama}
-                          </Link>
-                        ) : (
-                          "-"
-                        )}
-                      </td>
-                      <td className="py-4 px-6 border-r border-[#EDF2F7] text-center font-semibold text-gray-700">
-                        {item.pertemuan}
-                      </td>
-                      <td className="py-4 px-6 border-r border-[#EDF2F7]">{item.materi}</td>
-                      <td className="py-4 px-6 text-center whitespace-nowrap">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-white border-b border-[#E8EFFC] text-[#374151] font-semibold text-sm">
+                  <th className="py-4 px-6 border-r border-[#E8EFFC] text-center w-[16%]">Tanggal</th>
+                  <th className="py-4 px-6 border-r border-[#E8EFFC] text-center w-[20%]">Mata Kuliah</th>
+                  <th className="py-4 px-6 border-r border-[#E8EFFC] text-center w-[16%]">Pertemuan</th>
+                  <th className="py-4 px-6 border-r border-[#E8EFFC] text-center w-[24%]">Materi</th>
+                  <th className="py-4 px-6 text-center w-[24%]">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E8EFFC] text-[#4B5563] text-sm">
+                {rows.map((item) => (
+                  <tr key={item.id} className="hover:bg-[#F9FBFF] transition-colors">
+                    <td className="py-4 px-6 border-r border-[#E8EFFC] text-center whitespace-nowrap text-[#4B5563]">
+                      {formatDate(item.tanggal)}
+                    </td>
+                    <td className="py-4 px-6 border-r border-[#E8EFFC] text-center text-[#4B5563]">
+                      {item.mataKuliah?.nama || "-"}
+                    </td>
+                    <td className="py-4 px-6 border-r border-[#E8EFFC] text-center text-[#4B5563]">
+                      {item.pertemuan}
+                    </td>
+                    <td className="py-4 px-6 border-r border-[#E8EFFC] text-center text-[#4B5563]">
+                      {item.materi}
+                    </td>
+                    <td className="py-4 px-6 text-center whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-2.5">
                         <Link
-                          href={`/dashboard/rekap/edit?id=${item.id}&matkulId=${item.mataKuliah?.id || ""}&pertemuan=${item.pertemuan}&tanggal=${encodeURIComponent(new Date(item.tanggal).toISOString().split("T")[0])}&materi=${encodeURIComponent(item.materi)}&tugas=${encodeURIComponent(item.tugas || "")}`}
-                          className="px-4 py-1.5 text-xs font-semibold text-white bg-[#5B6DD6] hover:bg-[#4858B8] rounded-lg transition inline-block shadow-xs"
+                          href={`/dashboard/rekap/id?matkulId=${item.mataKuliah?.id || ""}&matkulNama=${encodeURIComponent(item.mataKuliah?.nama || "")}`}
+                          className="w-[74px] py-2 text-center text-xs font-semibold text-white bg-[#5068DE] hover:bg-[#4359cb] rounded-lg transition shadow-xs inline-block"
                         >
-                          Lihat / Edit
+                          Lihat
                         </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center px-6 py-4 bg-[#FAFBFD] border-t border-[#EDF2F7] gap-3">
-              <span className="text-gray-600 text-xs md:text-sm">
-                Menampilkan {(page - 1) * pageSize + 1} hingga {Math.min(page * pageSize, data.length)} dari {data.length} data
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                  disabled={page === 1}
-                  className="px-3 py-1.5 border border-[#CCD7ED] rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-40"
-                >
-                  Prev
-                </button>
-                <span className="text-xs font-bold text-gray-600 px-2">{page} / {totalPages}</span>
-                <button
-                  onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                  disabled={page === totalPages}
-                  className="px-3 py-1.5 border border-[#CCD7ED] rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-40"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          </>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(item.id, item.pertemuan)}
+                          className="w-[74px] py-2 text-center text-xs font-semibold text-white bg-[#D81A1A] hover:bg-[#bd1414] rounded-lg transition shadow-xs inline-block"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
+
+      {/* Pagination Footer di luar cardbox persis seperti gambar */}
+      {!loading && data.length > 0 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-1">
+          <span className="text-gray-500 text-sm">
+            Menampilkan {(page - 1) * pageSize + 1} hingga {Math.min(page * pageSize, data.length)} dari {data.length} data
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(p - 1, 1))}
+              disabled={page === 1}
+              className="w-10 h-10 flex items-center justify-center border border-[#CAD8F8] bg-white rounded-lg text-sm font-bold text-[#374151] hover:bg-gray-50 disabled:opacity-40 transition shadow-xs"
+              aria-label="Previous Page"
+            >
+              &lt;
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                className={`w-10 h-10 flex items-center justify-center rounded-lg text-sm font-bold transition ${
+                  page === p
+                    ? "bg-[#5068DE] text-white shadow-xs"
+                    : "border border-[#CAD8F8] bg-white text-[#374151] hover:bg-gray-50"
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+            <button
+              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+              disabled={page === totalPages}
+              className="w-10 h-10 flex items-center justify-center border border-[#CAD8F8] bg-white rounded-lg text-sm font-bold text-[#374151] hover:bg-gray-50 disabled:opacity-40 transition shadow-xs"
+              aria-label="Next Page"
+            >
+              &gt;
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
