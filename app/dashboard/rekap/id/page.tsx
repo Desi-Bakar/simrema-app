@@ -82,16 +82,17 @@ function DetailRekapContent() {
         const stored = localStorage.getItem("user");
         const user = stored ? JSON.parse(stored) : null;
 
-        const url = matkulId
-          ? `/api/materi?mataKuliahId=${encodeURIComponent(
-              matkulId
-            )}&email=${encodeURIComponent(
-              user?.email || ""
-            )}&role=${user?.role || "DOSEN"}`
-          : `/api/materi?email=${encodeURIComponent(
-              user?.email || ""
-            )}&role=${user?.role || "DOSEN"}`;
+        const params = new URLSearchParams();
+        if (matkulId) {
+          params.append("mataKuliahId", matkulId);
+        }
+        // Admin: fetch semua. Dosen: filter by email
+        if (user?.role === "DOSEN" && user?.email) {
+          params.append("email", user.email);
+        }
+        params.append("role", user?.role || "DOSEN");
 
+        const url = `/api/materi?${params.toString()}`;
         const res = await fetch(url);
         const json = await res.json();
 

@@ -32,9 +32,14 @@ export default function RekapTable() {
     try {
       const stored = localStorage.getItem("user");
       const user = stored ? JSON.parse(stored) : null;
-      const res = await fetch(
-        `/api/materi?email=${encodeURIComponent(user?.email || "")}&role=${user?.role || "DOSEN"}`
-      );
+      // Admin: fetch semua tanpa email filter. Dosen: fetch hanya punya dia
+      const params = new URLSearchParams();
+      if (user?.role === "DOSEN" && user?.email) {
+        params.append("email", user.email);
+      }
+      params.append("role", user?.role || "DOSEN");
+      
+      const res = await fetch(`/api/materi?${params.toString()}`);
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         setData(json.data);

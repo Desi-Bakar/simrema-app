@@ -28,7 +28,14 @@ export default function RekapMateriForm({ onSuccess, onCancel }: { onSuccess?: (
       const u = stored ? JSON.parse(stored) : null;
       if (u) {
         setUserEmail(u.email || "");
-        fetch(`/api/matakuliah?email=${encodeURIComponent(u.email || "")}&role=${u.role || "DOSEN"}`)
+        // Admin: fetch semua. Dosen: fetch hanya punya dia
+        const params = new URLSearchParams();
+        if (u.role === "DOSEN" && u.email) {
+          params.append("email", u.email);
+        }
+        params.append("role", u.role || "DOSEN");
+        
+        fetch(`/api/matakuliah?${params.toString()}`)
           .then((r) => r.json())
           .then((j) => {
             if (j.success && Array.isArray(j.data)) {
