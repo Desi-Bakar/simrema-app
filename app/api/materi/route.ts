@@ -163,19 +163,17 @@
 
 
 
+
 import { NextResponse } from "next/server";
 import { prisma } from "../../lib/prisma";
-import { mkdir, writeFile, unlink } from "fs/promises";
+import { put, get, del } from "@vercel/blob";
 import path from "path";
 import { randomUUID } from "crypto";
 
-// Gunakan Node.js runtime untuk akses penyimpanan file
 export const runtime = "nodejs";
 
-// Batas ukuran file: 10 MB
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-// Format file yang diperbolehkan
 const ALLOWED_TYPES: Record<string, string[]> = {
   ".pdf": ["application/pdf"],
   ".doc": ["application/msword"],
@@ -188,19 +186,20 @@ const ALLOWED_TYPES: Record<string, string[]> = {
   ],
 };
 
-// Struktur data dari request
 type RequestData = {
   fields: Record<string, string>;
   file: File | null;
 };
 
-// Membaca JSON atau FormData
+// =====================================================
+// MEMBACA REQUEST JSON ATAU FORMDATA
+// =====================================================
+
 async function readRequest(req: Request): Promise<RequestData> {
   const contentType = req.headers.get("content-type") || "";
 
   if (contentType.includes("multipart/form-data")) {
     const formData = await req.formData();
-
     const fields: Record<string, string> = {};
 
     formData.forEach((value, key) => {
@@ -229,85 +228,123 @@ async function readRequest(req: Request): Promise<RequestData> {
   };
 }
 
-// Menyimpan file ke public/uploads/materi
-async function saveFile(file: File) {
-  const extension = path.extname(file.name).toLowerCase();
+// =====================================================
+// VALIDASI FILE
+// =====================================================
 
+function validateFile(file: File) {
+  const extension = path.extname(file.name).toLowerCase();
   const allowedMimes = ALLOWED_TYPES[extension];
 
   if (!allowedMimes) {
-    throw new Error("Format file harus PDF, DOC, DOCX, PPT, atau PPTX.");
+    throw new Error(
+      "Format file harus PDF, DOC, DOCX, PPT, atau PPTX."
+    );
   }
 
   if (file.type && !allowedMimes.includes(file.type)) {
-    throw new Error("Jenis file tidak sesuai dengan format file.");
+    throw new Error(
+      "Jenis file tidak sesuai dengan format file."
+    );
   }
 
   if (file.size > MAX_FILE_SIZE) {
     throw new Error("Ukuran file maksimal 10 MB.");
   }
 
-  const folder = path.join(
-    process.cwd(),
-    "public",
-    "uploads",
-    "materi"
-  );
+  return extension;
+}
 
-  await mkdir(folder, { recursive: true });
+// =====================================================
+// MEMERIKSA URL PRIVATE BLOB
+// =====================================================
 
-  const fileName = `${randomUUID()}${extension}`;
-  const filePath = path.join(folder, fileName);
+function isPrivateBlobUrl(value: string | null): value is string {
+  if (!value) return false;
 
-  const buffer = Buffer.from(await file.arrayBuffer());
+  try {
+    const url = new URL(value);
 
-  await writeFile(filePath, buffer);
+    return (
+      url.protocol === "https:" &&
+      url.hostname.endsWith(
+        ".private.blob.vercel-storage.com"
+      )
+    );
+  } catch {
+    return false;
+  }
+}
+
+// =====================================================
+// UPLOAD FILE KE VERCEL BLOB PRIVATE
+// =====================================================
+
+async function saveFile(file: File) {
+  const extension = validateFile(file);
+
+  const pathname = `materi/${randomUUID()}${extension}`;
+
+  const blob = await put(pathname, file, {
+    access: "private",
+    addRandomSuffix: true,
+    contentType: file.type || "application/octet-stream",
+  });
+
+  // URL ini akan melewati API kita sendiri.
+  // Karena Blob bersifat private, file tidak dibuka
+  // langsung melalui URL Blob.
+  const params = new URLSearchParams({
+    download: blob.url,
+    filename: file.name,
+  });
 
   return {
-    fileUrl: `/uploads/materi/${fileName}`,
+    fileUrl: `/api/materi?${params.toString()}`,
     fileName: file.name,
     fileSize: file.size,
     fileType: file.type || extension,
   };
 }
 
-// Menghapus file lama dari penyimpanan
+// =====================================================
+// MENGHAPUS FILE DARI VERCEL BLOB
+// =====================================================
+
 async function removeFile(fileUrl?: string | null) {
   if (!fileUrl) return;
 
-  const prefix = "/uploads/materi/";
-
-  // Hanya boleh menghapus file di folder materi
-  if (!fileUrl.startsWith(prefix)) return;
-
-  const fileName = fileUrl.slice(prefix.length);
-
-  // Pastikan nama file tidak mengandung path tambahan
-  if (!fileName || path.basename(fileName) !== fileName) return;
-
-  const filePath = path.join(
-    process.cwd(),
-    "public",
-    "uploads",
-    "materi",
-    fileName
-  );
-
   try {
-    await unlink(filePath);
-  } catch (error) {
-    const code =
-      error && typeof error === "object" && "code" in error
-        ? error.code
-        : "";
+    const parsed = new URL(
+      fileUrl,
+      "https://simrema.local"
+    );
 
-    if (code !== "ENOENT") {
-      console.error("Gagal menghapus file:", error);
+    let blobUrl: string | null = null;
+
+    // Format fileUrl baru dari aplikasi
+    if (parsed.pathname === "/api/materi") {
+      blobUrl = parsed.searchParams.get("download");
     }
+    // Mendukung URL Blob langsung jika ada data lama
+    else if (isPrivateBlobUrl(fileUrl)) {
+      blobUrl = fileUrl;
+    }
+
+    if (!isPrivateBlobUrl(blobUrl)) return;
+
+    await del(blobUrl, {
+      // access: "private",
+    });
+  } catch (error) {
+    console.error("Gagal menghapus file Blob:", error);
   }
 }
 
-// Memeriksa error Prisma
+// =====================================================
+// MEMERIKSA ERROR PRISMA
+// =====================================================
+
 function isPrismaError(error: unknown, code: string) {
   return (
     error !== null &&
@@ -318,14 +355,60 @@ function isPrismaError(error: unknown, code: string) {
 }
 
 // =====================================================
-// GET: Mengambil data rekap materi dan master mata kuliah
+// GET: DATA REKAP ATAU DOWNLOAD FILE
 // =====================================================
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
 
-    // Mengambil seluruh master mata kuliah untuk dropdown
+    // Jika ada parameter download, ambil file dari Blob.
+    const downloadUrl = searchParams.get("download");
+
+    if (downloadUrl) {
+      if (!isPrivateBlobUrl(downloadUrl)) {
+        return NextResponse.json(
+          { success: false, message: "URL file tidak valid." },
+          { status: 400 }
+        );
+      }
+
+      const result = await get(downloadUrl, {
+        access: "private",
+      });
+
+      if (!result) {
+        return NextResponse.json(
+          { success: false, message: "File tidak ditemukan." },
+          { status: 404 }
+        );
+      }
+
+      const requestedName =
+        searchParams.get("filename") || "materi";
+
+      // Membersihkan karakter kontrol dari nama file.
+      const safeName = requestedName.replace(
+        /[\r\n"]/g,
+        "_"
+      );
+
+      return new Response(result.stream, {
+        status: 200,
+        headers: {
+          "Content-Type":
+            result.blob.contentType ||
+            "application/octet-stream",
+          "Content-Disposition":
+            `inline; filename*=UTF-8''${encodeURIComponent(safeName)}`,
+          "Content-Length": String(result.blob.size),
+          "Cache-Control": "private, no-store",
+          "X-Content-Type-Options": "nosniff",
+        },
+      });
+    }
+
+    // Mengambil master mata kuliah
     const type = searchParams.get("type");
 
     if (type === "mata-kuliah") {
@@ -345,7 +428,7 @@ export async function GET(req: Request) {
       });
     }
 
-    // Mengambil data rekap materi seperti sebelumnya
+    // Mengambil data rekap materi
     const email = searchParams.get("email");
     const role = searchParams.get("role");
     const id = searchParams.get("id");
@@ -407,7 +490,9 @@ export async function GET(req: Request) {
     console.error("Error GET materi:", error);
 
     const message =
-      error instanceof Error ? error.message : "Terjadi kesalahan";
+      error instanceof Error
+        ? error.message
+        : "Terjadi kesalahan";
 
     return NextResponse.json(
       { success: false, message },
@@ -417,8 +502,7 @@ export async function GET(req: Request) {
 }
 
 // =====================================================
-// POST: Menambahkan materi ajar
-// Mendukung JSON dan FormData
+// POST: MENAMBAHKAN MATERI AJAR
 // =====================================================
 
 export async function POST(req: Request) {
@@ -441,7 +525,7 @@ export async function POST(req: Request) {
 
     let targetMatkulId = mataKuliahId;
 
-    // Jika mata kuliah belum dipilih berdasarkan ID
+    // Mencari mata kuliah berdasarkan nama jika ID kosong.
     if (!targetMatkulId && mataKuliah) {
       const found = await prisma.mataKuliah.findFirst({
         where: {
@@ -516,8 +600,6 @@ export async function POST(req: Request) {
     const tahun = tahunAjaran?.trim() || null;
     const sem = semester?.trim() || null;
 
-    // Cari data dengan kombinasi mata kuliah,
-    // tahun ajaran, semester, dan pertemuan.
     const existing = await prisma.rekapMateri.findFirst({
       where: {
         mataKuliahId: targetMatkulId,
@@ -527,8 +609,10 @@ export async function POST(req: Request) {
       },
     });
 
-    // Upload file jika ada
-    const uploadedFile = file ? await saveFile(file) : null;
+    // Upload file baru jika ada.
+    const uploadedFile = file
+      ? await saveFile(file)
+      : null;
 
     if (uploadedFile) {
       newFileUrl = uploadedFile.fileUrl;
@@ -571,7 +655,6 @@ export async function POST(req: Request) {
       data: saved,
     });
   } catch (error: unknown) {
-    // Bersihkan file baru jika penyimpanan database gagal
     if (newFileUrl) {
       await removeFile(newFileUrl);
     }
@@ -586,7 +669,9 @@ export async function POST(req: Request) {
     }
 
     const message =
-      error instanceof Error ? error.message : "Terjadi kesalahan";
+      error instanceof Error
+        ? error.message
+        : "Terjadi kesalahan";
 
     return NextResponse.json(
       { message },
@@ -596,8 +681,7 @@ export async function POST(req: Request) {
 }
 
 // =====================================================
-// PUT: Memperbarui materi ajar dan file
-// Mendukung JSON dan FormData
+// PUT: MEMPERBARUI MATERI AJAR DAN FILE
 // =====================================================
 
 export async function PUT(req: Request) {
@@ -625,7 +709,6 @@ export async function PUT(req: Request) {
       );
     }
 
-    // Cari data lama
     const existing = await prisma.rekapMateri.findUnique({
       where: { id },
     });
@@ -660,7 +743,8 @@ export async function PUT(req: Request) {
       );
     }
 
-    const targetMatkulId = mataKuliahId || existing.mataKuliahId;
+    const targetMatkulId =
+      mataKuliahId || existing.mataKuliahId;
 
     const targetTahun =
       tahunAjaran !== undefined
@@ -672,7 +756,6 @@ export async function PUT(req: Request) {
         ? semester.trim() || null
         : existing.semester;
 
-    // Pastikan mata kuliah tujuan tersedia
     if (mataKuliahId) {
       const matkul = await prisma.mataKuliah.findUnique({
         where: { id: mataKuliahId },
@@ -686,7 +769,6 @@ export async function PUT(req: Request) {
       }
     }
 
-    // Periksa duplikasi pertemuan
     const duplicate = await prisma.rekapMateri.findFirst({
       where: {
         id: { not: id },
@@ -699,13 +781,17 @@ export async function PUT(req: Request) {
 
     if (duplicate) {
       return NextResponse.json(
-        { message: "Pertemuan tersebut sudah ada pada mata kuliah ini." },
+        {
+          message:
+            "Pertemuan tersebut sudah ada pada mata kuliah ini.",
+        },
         { status: 409 }
       );
     }
 
-    // Upload file baru jika dipilih
-    const uploadedFile = file ? await saveFile(file) : null;
+    const uploadedFile = file
+      ? await saveFile(file)
+      : null;
 
     if (uploadedFile) {
       newFileUrl = uploadedFile.fileUrl;
@@ -744,7 +830,6 @@ export async function PUT(req: Request) {
       },
     });
 
-    // Hapus file lama setelah database berhasil diperbarui
     if (uploadedFile || removeOldFile) {
       await removeFile(existing.fileUrl);
     }
@@ -776,7 +861,9 @@ export async function PUT(req: Request) {
     }
 
     const message =
-      error instanceof Error ? error.message : "Terjadi kesalahan";
+      error instanceof Error
+        ? error.message
+        : "Terjadi kesalahan";
 
     return NextResponse.json(
       { message },
@@ -786,7 +873,7 @@ export async function PUT(req: Request) {
 }
 
 // =====================================================
-// DELETE: Menghapus materi beserta file
+// DELETE: MENGHAPUS MATERI DAN FILE
 // =====================================================
 
 export async function DELETE(req: Request) {
@@ -816,7 +903,6 @@ export async function DELETE(req: Request) {
       where: { id },
     });
 
-    // Hapus file fisik setelah data berhasil dihapus
     await removeFile(existing.fileUrl);
 
     return NextResponse.json({
@@ -827,7 +913,9 @@ export async function DELETE(req: Request) {
     console.error("Error DELETE materi:", error);
 
     const message =
-      error instanceof Error ? error.message : "Terjadi kesalahan";
+      error instanceof Error
+        ? error.message
+        : "Terjadi kesalahan";
 
     return NextResponse.json(
       { message },
