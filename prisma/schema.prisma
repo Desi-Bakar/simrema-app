@@ -45,6 +45,7 @@ model MataKuliah {
   kode        String?
   nama        String
   sks         Int?          @default(3)
+  tahunAjaran String?
   semester    String?
   dosenEmail  String
   dosen       User          @relation(fields: [dosenEmail], references: [email], onDelete: Cascade)
@@ -55,22 +56,38 @@ model MataKuliah {
   @@map("mata_kuliah")
 }
 
+
 model RekapMateri {
   id           String     @id @default(cuid())
   mataKuliahId String
   mataKuliah   MataKuliah @relation(fields: [mataKuliahId], references: [id], onDelete: Cascade)
+
   dosenEmail   String
   dosen        User       @relation(fields: [dosenEmail], references: [email], onDelete: Cascade)
+
+  tahunAjaran  String?
+  semester     String?
+
   pertemuan    Int
   tanggal      DateTime   @default(now())
   materi       String
   tugas        String?
+
+  // Informasi file materi yang diunggah
+  fileUrl      String?
+  fileName     String?
+  fileSize     Int?
+  fileType     String?
+
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
-  @@unique([mataKuliahId, pertemuan])
+  @@unique([mataKuliahId, tahunAjaran, semester, pertemuan])
+  @@index([dosenEmail])
+  @@index([mataKuliahId])
   @@map("rekap_materi")
 }
+
 
 enum Role {
   DOSEN
