@@ -48,6 +48,7 @@
 //   .finally(() => prisma.$disconnect());
 
 
+
 import assert from "node:assert";
 import { prisma } from "../app/lib/prisma";
 
@@ -55,15 +56,31 @@ async function check() {
   const admin = await prisma.user.findFirst({
     where: { role: "ADMIN" },
   });
+
   assert(admin, "Admin user must exist");
 
-  const matkul = await prisma.mataKuliah.findFirst();
-  assert(matkul, "At least one mata kuliah must exist");
+  const matkul = await prisma.mataKuliah.findFirst({
+    where: {
+      tahunAjaran: { not: null },
+      semester: { not: null },
+    },
+  });
+
+  assert(
+    matkul,
+    "Mata kuliah dengan tahun ajaran dan semester harus tersedia"
+  );
+
+  // Pastikan kedua nilai tidak null
+  const tahunAjaran = matkul.tahunAjaran;
+  const semester = matkul.semester;
+
+  if (tahunAjaran === null || semester === null) {
+    throw new Error("Tahun ajaran dan semester tidak boleh kosong");
+  }
 
   // Create test rekap materi
   const testPertemuan = 999;
-  const tahunAjaran = matkul.tahunAjaran;
-  const semester = matkul.semester;
 
   const created = await prisma.rekapMateri.upsert({
     where: {
@@ -121,4 +138,3 @@ check()
   .finally(async () => {
     await prisma.$disconnect();
   });
-
