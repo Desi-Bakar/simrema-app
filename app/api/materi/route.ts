@@ -162,6 +162,7 @@
 // dari no 1-162 ini codingan lama sebelum di revisi
 
 
+
 import { NextResponse } from "next/server";
 import { prisma } from "../../lib/prisma";
 import { mkdir, writeFile, unlink } from "fs/promises";
@@ -317,13 +318,34 @@ function isPrismaError(error: unknown, code: string) {
 }
 
 // =====================================================
-// GET: Mengambil data rekap materi
+// GET: Mengambil data rekap materi dan master mata kuliah
 // =====================================================
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
 
+    // Mengambil seluruh master mata kuliah untuk dropdown
+    const type = searchParams.get("type");
+
+    if (type === "mata-kuliah") {
+      const mataKuliah = await prisma.mataKuliah.findMany({
+        select: {
+          id: true,
+          nama: true,
+        },
+        orderBy: {
+          nama: "asc",
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: mataKuliah,
+      });
+    }
+
+    // Mengambil data rekap materi seperti sebelumnya
     const email = searchParams.get("email");
     const role = searchParams.get("role");
     const id = searchParams.get("id");
@@ -364,7 +386,9 @@ export async function GET(req: Request) {
           select: {
             email: true,
             profilDosen: {
-              select: { nama: true },
+              select: {
+                nama: true,
+              },
             },
           },
         },
@@ -385,7 +409,10 @@ export async function GET(req: Request) {
     const message =
       error instanceof Error ? error.message : "Terjadi kesalahan";
 
-    return NextResponse.json({ message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message },
+      { status: 500 }
+    );
   }
 }
 
@@ -561,7 +588,10 @@ export async function POST(req: Request) {
     const message =
       error instanceof Error ? error.message : "Terjadi kesalahan";
 
-    return NextResponse.json({ message }, { status: 500 });
+    return NextResponse.json(
+      { message },
+      { status: 500 }
+    );
   }
 }
 
@@ -631,6 +661,7 @@ export async function PUT(req: Request) {
     }
 
     const targetMatkulId = mataKuliahId || existing.mataKuliahId;
+
     const targetTahun =
       tahunAjaran !== undefined
         ? tahunAjaran.trim() || null
@@ -747,7 +778,10 @@ export async function PUT(req: Request) {
     const message =
       error instanceof Error ? error.message : "Terjadi kesalahan";
 
-    return NextResponse.json({ message }, { status: 500 });
+    return NextResponse.json(
+      { message },
+      { status: 500 }
+    );
   }
 }
 
@@ -795,7 +829,9 @@ export async function DELETE(req: Request) {
     const message =
       error instanceof Error ? error.message : "Terjadi kesalahan";
 
-    return NextResponse.json({ message }, { status: 500 });
+    return NextResponse.json(
+      { message },
+      { status: 500 }
+    );
   }
 }
-

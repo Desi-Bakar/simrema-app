@@ -51,8 +51,8 @@ export default function LoginPage() {
 
       {/* Login Card */}
       <div className="flex flex-1 items-center justify-center p-4">
-        <div className="bg-white shadow-md rounded-xl w-full max-w-[900px] p-8 flex flex-col md:flex-row gap-10">
-          <div className="w-full md:w-[400px]">
+        <div className="bg-white shadow-md rounded-xl w-full max-w-225 p-8 flex flex-col md:flex-row gap-10">
+          <div className="w-full md:w-100">
             <h2 className="text-2xl font-bold mb-2">Login SIMREMA</h2>
             <p className="text-sm text-gray-500 mb-6">
               Masuk untuk mengelola materi perkuliahan Anda.

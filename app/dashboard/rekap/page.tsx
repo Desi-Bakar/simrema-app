@@ -194,6 +194,7 @@
 // dari no 1-194 ini adalah codingan yang lama, sebelum direvisi
 
 
+
 "use client";
 
 import Link from "next/link";
@@ -216,6 +217,13 @@ type RekapRow = {
   };
 };
 
+type MataKuliah = {
+  id: string;
+  nama: string;
+  tahunAjaran?: string | null;
+  semester?: string | null;
+};
+
 function formatDate(d: string | Date) {
   const date = new Date(d);
 
@@ -230,6 +238,8 @@ function formatDate(d: string | Date) {
 
 export default function RekapTable() {
   const [data, setData] = useState<RekapRow[]>([]);
+  const [mataKuliahList, setMataKuliahList] = useState<MataKuliah[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
 
@@ -240,7 +250,7 @@ export default function RekapTable() {
 
   const pageSize = 5;
 
-  // Mengambil data dari API
+  // Mengambil data rekap materi
   const fetchRekap = async () => {
     try {
       const stored = localStorage.getItem("user");
@@ -267,11 +277,39 @@ export default function RekapTable() {
     }
   };
 
+  // Mengambil data master mata kuliah
+  const fetchMataKuliah = async () => {
+    try {
+      const stored = localStorage.getItem("user");
+      const user = stored ? JSON.parse(stored) : null;
+
+      const params = new URLSearchParams();
+
+      params.append("role", user?.role || "DOSEN");
+
+      if (user?.email) {
+        params.append("email", user.email);
+      }
+
+      const res = await fetch(`/api/matakuliah?${params.toString()}`);
+      const json = await res.json();
+
+      if (json.success && Array.isArray(json.data)) {
+        setMataKuliahList(json.data);
+      } else {
+        console.error("Format data mata kuliah tidak sesuai:", json);
+      }
+    } catch (error) {
+      console.error("Gagal mengambil data mata kuliah:", error);
+    }
+  };
+
   useEffect(() => {
     fetchRekap();
+    fetchMataKuliah();
   }, []);
 
-  // Pilihan dropdown diambil dari data database
+  // Dropdown tahun ajaran
   const tahunOptions = useMemo(() => {
     return Array.from(
       new Set(
@@ -282,17 +320,19 @@ export default function RekapTable() {
     ).sort();
   }, [data]);
 
+  // Dropdown mata kuliah mengikuti tahun ajaran dan semester
   const matkulOptions = useMemo(() => {
-    const unique = new Map<string, string>();
+    return mataKuliahList.filter((item) => {
+      const cocokTahun =
+        !tahunAjaran || item.tahunAjaran === tahunAjaran;
 
-    data.forEach((item) => {
-      if (item.mataKuliah) {
-        unique.set(item.mataKuliah.id, item.mataKuliah.nama);
-      }
+      const cocokSemester =
+        !semester ||
+        item.semester?.toLowerCase() === semester.toLowerCase();
+
+      return cocokTahun && cocokSemester;
     });
-
-    return Array.from(unique.entries());
-  }, [data]);
+  }, [mataKuliahList, tahunAjaran, semester]);
 
   // Filter data berdasarkan dropdown
   const filteredData = useMemo(() => {
@@ -311,16 +351,26 @@ export default function RekapTable() {
     });
   }, [data, tahunAjaran, semester, matkulId]);
 
-  // Reset halaman ketika filter berubah
+  // Reset halaman dan pilihan mata kuliah ketika filter berubah
   const handleFilterChange = (
     type: "tahun" | "semester" | "matkul",
     value: string
   ) => {
     setPage(1);
 
-    if (type === "tahun") setTahunAjaran(value);
-    if (type === "semester") setSemester(value);
-    if (type === "matkul") setMatkulId(value);
+    if (type === "tahun") {
+      setTahunAjaran(value);
+      setMatkulId("");
+    }
+
+    if (type === "semester") {
+      setSemester(value);
+      setMatkulId("");
+    }
+
+    if (type === "matkul") {
+      setMatkulId(value);
+    }
   };
 
   // Hapus materi
@@ -442,9 +492,9 @@ export default function RekapTable() {
           >
             <option value="">Semua Mata Kuliah</option>
 
-            {matkulOptions.map(([id, nama]) => (
-              <option key={id} value={id}>
-                {nama}
+            {matkulOptions.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.nama}
               </option>
             ))}
           </select>
