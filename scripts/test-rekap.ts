@@ -49,16 +49,19 @@
 
 
 
+
 import assert from "node:assert";
 import { prisma } from "../app/lib/prisma";
 
 async function check() {
+  // Memeriksa admin
   const admin = await prisma.user.findFirst({
     where: { role: "ADMIN" },
   });
 
   assert(admin, "Admin user must exist");
 
+  // Mencari mata kuliah yang memiliki tahun ajaran dan semester
   const matkul = await prisma.mataKuliah.findFirst({
     where: {
       tahunAjaran: { not: null },
@@ -71,18 +74,21 @@ async function check() {
     "Mata kuliah dengan tahun ajaran dan semester harus tersedia"
   );
 
-  // Pastikan kedua nilai tidak null
-  const tahunAjaran = matkul.tahunAjaran;
-  const semester = matkul.semester;
-
-  if (tahunAjaran === null || semester === null) {
-    throw new Error("Tahun ajaran dan semester tidak boleh kosong");
+  // Memastikan tahun ajaran dan semester tidak null
+  if (matkul.tahunAjaran === null || matkul.semester === null) {
+    throw new Error(
+      "Tahun ajaran dan semester mata kuliah belum diisi"
+    );
   }
 
-  // Create test rekap materi
+  const tahunAjaran: string = matkul.tahunAjaran;
+  const semester: string = matkul.semester;
+
+  // Membuat data pengujian
   const testPertemuan = 999;
 
-  const created = await prisma.rekapMateri.upsert({
+  // Memastikan data pengujian belum ada agar tidak mengubah data lama
+  const existing = await prisma.rekapMateri.findUnique({
     where: {
       mataKuliahId_tahunAjaran_semester_pertemuan: {
         mataKuliahId: matkul.id,
@@ -91,11 +97,17 @@ async function check() {
         pertemuan: testPertemuan,
       },
     },
-    update: {
-      materi: "Self check test materi",
-      tugas: "Self check tugas",
-    },
-    create: {
+  });
+
+  if (existing) {
+    throw new Error(
+      "Data pengujian pertemuan 999 sudah ada. Hapus atau gunakan nomor lain."
+    );
+  }
+
+  // Create test rekap materi
+  const created = await prisma.rekapMateri.create({
+    data: {
       mataKuliahId: matkul.id,
       dosenEmail: matkul.dosenEmail,
       tahunAjaran,
@@ -111,10 +123,15 @@ async function check() {
   // Update test rekap materi
   const updated = await prisma.rekapMateri.update({
     where: { id: created.id },
-    data: { materi: "Updated self check materi" },
+    data: {
+      materi: "Updated self check materi",
+    },
   });
 
-  assert.strictEqual(updated.materi, "Updated self check materi");
+  assert.strictEqual(
+    updated.materi,
+    "Updated self check materi"
+  );
 
   // Cleanup test record
   await prisma.rekapMateri.delete({
@@ -125,14 +142,18 @@ async function check() {
     where: { id: created.id },
   });
 
-  assert.strictEqual(deleted, null, "Record should be deleted");
+  assert.strictEqual(
+    deleted,
+    null,
+    "Record should be deleted"
+  );
 
   console.log("RekapMateri CRUD check passed.");
 }
 
 check()
-  .catch((e) => {
-    console.error(e);
+  .catch((error) => {
+    console.error(error);
     process.exitCode = 1;
   })
   .finally(async () => {
